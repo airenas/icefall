@@ -93,7 +93,6 @@ Usage:
     --max-states 64
 """
 
-
 import argparse
 import logging
 import math
@@ -106,7 +105,9 @@ import k2
 import sentencepiece as spm
 import torch
 import torch.nn as nn
-from asr_datamodule import LibriSpeechAsrDataModule
+from lhotse import set_caching_enabled
+
+from asr_datamodule import Liepa3AsrDataModule
 from beam_search import (
     beam_search,
     fast_beam_search_nbest,
@@ -121,9 +122,6 @@ from beam_search import (
     modified_beam_search_lm_shallow_fusion,
     modified_beam_search_LODR,
 )
-from lhotse import set_caching_enabled
-from train import add_model_arguments, get_model, get_params
-
 from icefall import ContextGraph, LmScorer, NgramLm
 from icefall.checkpoint import (
     average_checkpoints,
@@ -139,6 +137,7 @@ from icefall.utils import (
     str2bool,
     write_error_stats,
 )
+from train import add_model_arguments, get_model, get_params
 
 LOG_EPS = math.log(1e-10)
 
@@ -172,8 +171,8 @@ def get_parser():
         type=int,
         default=15,
         help="Number of checkpoints to average. Automatically select "
-        "consecutive checkpoints before the checkpoint specified by "
-        "'--epoch' and '--iter'",
+             "consecutive checkpoints before the checkpoint specified by "
+             "'--epoch' and '--iter'",
     )
 
     parser.add_argument(
@@ -181,10 +180,10 @@ def get_parser():
         type=str2bool,
         default=True,
         help="Whether to load averaged model. Currently it only supports "
-        "using --epoch. If True, it would decode with the averaged model "
-        "over the epoch range from `epoch-avg` (excluded) to `epoch`."
-        "Actually only the models with epoch number of `epoch-avg` and "
-        "`epoch` are loaded for averaging. ",
+             "using --epoch. If True, it would decode with the averaged model "
+             "over the epoch range from `epoch-avg` (excluded) to `epoch`."
+             "Actually only the models with epoch number of `epoch-avg` and "
+             "`epoch` are loaded for averaging. ",
     )
 
     parser.add_argument(
@@ -384,16 +383,16 @@ def get_parser():
 
 
 def decode_one_batch(
-    params: AttributeDict,
-    model: nn.Module,
-    sp: spm.SentencePieceProcessor,
-    batch: dict,
-    word_table: Optional[k2.SymbolTable] = None,
-    decoding_graph: Optional[k2.Fsa] = None,
-    context_graph: Optional[ContextGraph] = None,
-    LM: Optional[LmScorer] = None,
-    ngram_lm=None,
-    ngram_lm_scale: float = 0.0,
+        params: AttributeDict,
+        model: nn.Module,
+        sp: spm.SentencePieceProcessor,
+        batch: dict,
+        word_table: Optional[k2.SymbolTable] = None,
+        decoding_graph: Optional[k2.Fsa] = None,
+        context_graph: Optional[ContextGraph] = None,
+        LM: Optional[LmScorer] = None,
+        ngram_lm=None,
+        ngram_lm_scale: float = 0.0,
 ) -> Dict[str, List[List[str]]]:
     """Decode one batch and return the result in a dict. The dict has the
     following format:
@@ -579,7 +578,7 @@ def decode_one_batch(
 
         for i in range(batch_size):
             # fmt: off
-            encoder_out_i = encoder_out[i:i+1, :encoder_out_lens[i]]
+            encoder_out_i = encoder_out[i:i + 1, :encoder_out_lens[i]]
             # fmt: on
             if params.decoding_method == "greedy_search":
                 hyp = greedy_search(
@@ -617,8 +616,8 @@ def decode_one_batch(
     elif "modified_beam_search" in params.decoding_method:
         prefix += f"_beam-size-{params.beam_size}"
         if params.decoding_method in (
-            "modified_beam_search_lm_rescore",
-            "modified_beam_search_lm_rescore_LODR",
+                "modified_beam_search_lm_rescore",
+                "modified_beam_search_lm_rescore_LODR",
         ):
             ans = dict()
             assert ans_dict is not None
@@ -636,16 +635,16 @@ def decode_one_batch(
 
 
 def decode_dataset(
-    dl: torch.utils.data.DataLoader,
-    params: AttributeDict,
-    model: nn.Module,
-    sp: spm.SentencePieceProcessor,
-    word_table: Optional[k2.SymbolTable] = None,
-    decoding_graph: Optional[k2.Fsa] = None,
-    context_graph: Optional[ContextGraph] = None,
-    LM: Optional[LmScorer] = None,
-    ngram_lm=None,
-    ngram_lm_scale: float = 0.0,
+        dl: torch.utils.data.DataLoader,
+        params: AttributeDict,
+        model: nn.Module,
+        sp: spm.SentencePieceProcessor,
+        word_table: Optional[k2.SymbolTable] = None,
+        decoding_graph: Optional[k2.Fsa] = None,
+        context_graph: Optional[ContextGraph] = None,
+        LM: Optional[LmScorer] = None,
+        ngram_lm=None,
+        ngram_lm_scale: float = 0.0,
 ) -> Dict[str, List[Tuple[str, List[str], List[str]]]]:
     """Decode dataset.
 
@@ -720,15 +719,14 @@ def decode_dataset(
 
 
 def save_asr_output(
-    params: AttributeDict,
-    test_set_name: str,
-    results_dict: Dict[str, List[Tuple[str, List[str], List[str]]]],
+        params: AttributeDict,
+        test_set_name: str,
+        results_dict: Dict[str, List[Tuple[str, List[str], List[str]]]],
 ):
     """
     Save text produced by ASR.
     """
     for key, results in results_dict.items():
-
         recogs_filename = params.res_dir / f"recogs-{test_set_name}-{params.suffix}.txt"
 
         results = sorted(results)
@@ -738,9 +736,9 @@ def save_asr_output(
 
 
 def save_wer_results(
-    params: AttributeDict,
-    test_set_name: str,
-    results_dict: Dict[str, List[Tuple[str, List[str], List[str], Tuple]]],
+        params: AttributeDict,
+        test_set_name: str,
+        results_dict: Dict[str, List[Tuple[str, List[str], List[str], Tuple]]],
 ):
     """
     Save WER and per-utterance word alignments.
@@ -778,7 +776,7 @@ def save_wer_results(
 @torch.no_grad()
 def main():
     parser = get_parser()
-    LibriSpeechAsrDataModule.add_arguments(parser)
+    Liepa3AsrDataModule.add_arguments(parser)
     LmScorer.add_arguments(parser)
     args = parser.parse_args()
     args.exp_dir = Path(args.exp_dir)
@@ -816,10 +814,10 @@ def main():
 
     if params.causal:
         assert (
-            "," not in params.chunk_size
+                "," not in params.chunk_size
         ), "chunk_size should be one value in decoding."
         assert (
-            "," not in params.left_context_frames
+                "," not in params.left_context_frames
         ), "left_context_frames should be one value in decoding."
         params.suffix += f"_chunk-{params.chunk_size}"
         params.suffix += f"_left-context-{params.left_context_frames}"
@@ -836,8 +834,8 @@ def main():
     elif "beam_search" in params.decoding_method:
         params.suffix += f"__{params.decoding_method}__beam-size-{params.beam_size}"
         if params.decoding_method in (
-            "modified_beam_search",
-            "modified_beam_search_LODR",
+                "modified_beam_search",
+                "modified_beam_search_LODR",
         ):
             if params.has_contexts:
                 params.suffix += f"-context-score-{params.context_score}"
@@ -881,8 +879,8 @@ def main():
     if not params.use_averaged_model:
         if params.iter > 0:
             filenames = find_checkpoints(params.exp_dir, iteration=-params.iter)[
-                : params.avg
-            ]
+                        : params.avg
+                        ]
             if len(filenames) == 0:
                 raise ValueError(
                     f"No checkpoints found for"
@@ -910,8 +908,8 @@ def main():
     else:
         if params.iter > 0:
             filenames = find_checkpoints(params.exp_dir, iteration=-params.iter)[
-                : params.avg + 1
-            ]
+                        : params.avg + 1
+                        ]
             if len(filenames) == 0:
                 raise ValueError(
                     f"No checkpoints found for"
@@ -960,10 +958,10 @@ def main():
 
     # only load the neural network LM if required
     if params.use_shallow_fusion or params.decoding_method in (
-        "modified_beam_search_lm_rescore",
-        "modified_beam_search_lm_rescore_LODR",
-        "modified_beam_search_lm_shallow_fusion",
-        "modified_beam_search_LODR",
+            "modified_beam_search_lm_rescore",
+            "modified_beam_search_lm_rescore_LODR",
+            "modified_beam_search_lm_shallow_fusion",
+            "modified_beam_search_LODR",
     ):
         LM = LmScorer(
             lm_type=params.lm_type,
@@ -1040,16 +1038,14 @@ def main():
 
     # we need cut ids to display recognition results.
     args.return_cuts = True
-    librispeech = LibriSpeechAsrDataModule(args)
+    liepa3speech = Liepa3AsrDataModule(args)
 
-    test_clean_cuts = librispeech.test_clean_cuts()
-    test_other_cuts = librispeech.test_other_cuts()
+    test_cuts = liepa3speech.test_cuts()
 
-    test_clean_dl = librispeech.test_dataloaders(test_clean_cuts)
-    test_other_dl = librispeech.test_dataloaders(test_other_cuts)
+    test_dl = liepa3speech.test_dataloaders(test_cuts)
 
-    test_sets = ["test-clean", "test-other"]
-    test_dl = [test_clean_dl, test_other_dl]
+    test_sets = ["test"]
+    test_dl = [test_dl]
 
     for test_set, test_dl in zip(test_sets, test_dl):
         results_dict = decode_dataset(
