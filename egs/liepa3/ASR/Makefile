@@ -14,10 +14,12 @@ dbuild:
 
 run:
 	docker run --gpus all --rm -it \
+		--name liepa3-asr \
 	  	-v $(PWD):/workspace/icefall/egs/liepa3/ASR \
 		-v $(corpus_dir):/workspace/icefall/egs/liepa3/ASR/corpus \
 		-v $(data_dir):/workspace/icefall/egs/liepa3/ASR/data \
-		-u $(docker_user) -e HOME=/tmp $(tag)  \
-		/bin/bash
+		-u $(docker_user) -e HOME=/tmp \
+		--shm-size=16g \
+		$(tag)  /bin/bash
 #####################################################################################
 .PHONY: dbuild run
