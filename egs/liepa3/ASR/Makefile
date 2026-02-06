@@ -1,3 +1,4 @@
+-include Makefile.options
 #####################################################################################
 service=airenas/icefall
 version?=dev
