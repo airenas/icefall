@@ -1041,11 +1041,13 @@ def main():
     liepa3speech = Liepa3AsrDataModule(args)
 
     test_cuts = liepa3speech.test_cuts()
+    dev_cuts = liepa3speech.dev_cuts()
 
     test_dl = liepa3speech.test_dataloaders(test_cuts)
+    dev_dl = liepa3speech.test_dataloaders(dev_cuts)
 
-    test_sets = ["test"]
-    test_dl = [test_dl]
+    test_sets = ["test", "dev"]
+    test_dl = [test_dl, dev_dl]
 
     for test_set, test_dl in zip(test_sets, test_dl):
         results_dict = decode_dataset(
