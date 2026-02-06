@@ -40,24 +40,9 @@ stop_stage=5
 #     - noise
 #     - speech
 #
-# lm directory is not necessary for transducer training with bpe units, but it
-# is needed by phone based modeling, you can download it by running
-# bash prepare.sh --stage -1 --stop-stage -1
-# then you can see the following files in the directory.
-#  - $dl_dir/lm
-#      This directory contains the following files downloaded from
-#       http://www.openslr.org/resources/11
-#
-#        - 3-gram.pruned.1e-7.arpa.gz
-#        - 3-gram.pruned.1e-7.arpa
-#        - 4-gram.arpa.gz
-#        - 4-gram.arpa
-#        - liepa3-vocab.txt
-#        - liepa3-lexicon.txt
-#        - liepa3-lm-norm.txt.gz
 
 dl_dir=$PWD/data/download
-corpus_dir=$PWD/data/LIEPA3
+corpus_dir=$PWD/corpus
 
 . shared/parse_options.sh || exit 1
 
