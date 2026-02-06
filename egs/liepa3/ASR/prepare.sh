@@ -44,6 +44,9 @@ stop_stage=5
 dl_dir=$PWD/data/download
 corpus_dir=$PWD/corpus
 
+# 0 means no limit - take all data
+limit_count=0
+
 . shared/parse_options.sh || exit 1
 
 # vocab size for sentence piece models.
@@ -101,7 +104,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
   mkdir -p data/manifests
   if [ ! -e data/manifests/.liepa3.done ]; then
     python3 local/prepare_corpus.py --corpus-dir $corpus_dir --transcript-file $corpus_dir/verified_utterances_20260121.csv \
-          --output-dir data/manifests --limit-count 10000
+          --output-dir data/manifests --limit-count $limit_count
     # Split train/dev/test (90/5/5)
     python3 local/split.py --manifest-dir data/manifests
     touch data/manifests/.liepa3.done
