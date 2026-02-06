@@ -9,17 +9,16 @@ The generated fbank features are saved in data/fbank.
 """
 
 import argparse
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
 import sentencepiece as spm
 import torch
-from filter_cuts import filter_cuts
 from lhotse import CutSet, Fbank, FbankConfig, LilcomChunkyWriter
-from lhotse.recipes.utils import read_manifests_if_cached
 
+from filter_cuts import filter_cuts
 from icefall.utils import get_executor, str2bool
 
 # Torch's multithreaded behavior needs to be disabled or
@@ -57,9 +56,9 @@ def get_args():
 
 
 def compute_fbank_liepa3(
-    bpe_model: Optional[str] = None,
-    dataset: Optional[str] = None,
-    perturb_speed: Optional[bool] = True,
+        bpe_model: Optional[str] = None,
+        dataset: Optional[str] = None,
+        perturb_speed: Optional[bool] = True,
 ):
     src_dir = Path("data/manifests")
     output_dir = Path("data/fbank")
@@ -79,7 +78,6 @@ def compute_fbank_liepa3(
         )
     else:
         dataset_parts = dataset.split(" ", -1)
-
 
     # prefix = "liepa3"
     suffix = "jsonl.gz"
@@ -119,9 +117,9 @@ def compute_fbank_liepa3(
                 if perturb_speed:
                     logging.info(f"Doing speed perturb")
                     cut_set = (
-                        cut_set
-                        + cut_set.perturb_speed(0.9)
-                        + cut_set.perturb_speed(1.1)
+                            cut_set
+                            + cut_set.perturb_speed(0.9)
+                            + cut_set.perturb_speed(1.1)
                     )
             cut_set = cut_set.compute_and_store_features(
                 extractor=extractor,
@@ -136,7 +134,8 @@ def compute_fbank_liepa3(
 
 if __name__ == "__main__":
     formatter = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
-    logging.basicConfig(format=formatter, level=getattr(logging, os.environ.get("LOGLEVEL", "WARNING").upper(), logging.WARNING))
+    logging.basicConfig(format=formatter,
+                        level=getattr(logging, os.environ.get("LOGLEVEL", "WARNING").upper(), logging.WARNING))
 
     args = get_args()
     logging.info(vars(args))
