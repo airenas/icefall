@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from lhotse import RecordingSet, SupervisionSet, CutSet, Recording, SupervisionSegment
+from tqdm import tqdm
 
 
 def get_args():
@@ -71,7 +72,7 @@ def main():
 
     with open(transcript_file, newline="", encoding="utf-8-sig") as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
+        for row in tqdm(reader, desc="Processing cv file"):
             audio_rel_path = Path(row["Audio_file_path_title"])
             audio_path = corpus_dir / audio_rel_path
             recording_id = row.get("Record_id")
