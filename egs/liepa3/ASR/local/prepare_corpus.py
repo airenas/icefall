@@ -83,13 +83,25 @@ def main():
                 logging.warning(f"file not found: {audio_path}")
                 continue
 
-            speaker = row["Speaker_id"]
-            duration = float(row["Duration_total"]) / 1000.0
-            start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
-            text = clean(row["Utterance_text"])
+            csv_duration = float(row["Duration_total"]) / 1000.0
 
             # Recording object (per utterance or per file, here per utterance)
             recording = Recording.from_file(audio_path, recording_id=recording_id)
+            actual_duration = recording.duration
+            if abs(actual_duration - csv_duration) > 0.1:
+                logging.warning(
+                    "duration mismatch for %s: csv=%.3fs audio=%.3fs, skipping",
+                    audio_path,
+                    duration,
+                    actual_duration,
+                )
+                continue
+            duration = actual_duration
+
+            speaker = row["Speaker_id"]
+            start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
+            text = clean(row["Utterance_text"])
+
             recordings.append(recording)
 
             # Supervision object
