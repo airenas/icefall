@@ -28,7 +28,7 @@ make dbuild
 
 ### start docker
 ```bash
-make run
+make run d_mode=-d
 make attach
 ```
 
@@ -39,15 +39,15 @@ make attach
 cd egs/liepa3/ASR
 
 ### prepare
-nohup make ./prepare.sh > data/pr.log &
-tail -f data/pr,log
+nohup ./prepare.sh > data/pr.log &
+tail -f data/pr.log
 
 
 ### train
-./zipformer/train.py   --world-size 1  --num-epochs 30   --start-epoch 1   --use-fp16 1   --exp-dir data/exp/v01   --max-duration 1000
+nohup ./zipformer/train.py   --world-size 1  --num-epochs 30   --start-epoch 1   --use-fp16 1   --exp-dir data/exp/v01   --max-duration 1000 > data/tr.log &
 
 ### decode
-./zipformer/decode.py  --epoch 30  --avg 15  --exp-dir data/exp/v01   --max-duration 1000 --decoding-method modified_beam_search  -beam-size 4
+./zipformer/decode.py  --epoch 30  --avg 15  --exp-dir data/exp/v01   --max-duration 1000 --decoding-method modified_beam_search  -beam-size 4 
 
 ```
 
