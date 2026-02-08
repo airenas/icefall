@@ -62,7 +62,7 @@ def compute_fbank_liepa3(
 ):
     src_dir = Path("data/manifests")
     output_dir = Path("data/fbank")
-    num_jobs = min(15, os.cpu_count())
+    num_jobs = min(30, os.cpu_count())
     num_mel_bins = 80
 
     if bpe_model:
