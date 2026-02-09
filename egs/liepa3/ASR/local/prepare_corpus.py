@@ -43,7 +43,7 @@ def get_args():
     return parser.parse_args()
 
 
-def clean(param: str) -> str:
+def clean_text(param: str) -> str:
     """Clean the input text.
     """
 
@@ -100,7 +100,7 @@ def main():
 
             speaker = row["Speaker_id"]
             start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
-            text = clean(row["Utterance_text"])
+            text = clean_text(row["Utterance_text"])
 
             recordings.append(recording)
 

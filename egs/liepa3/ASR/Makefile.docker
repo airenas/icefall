@@ -1,0 +1,39 @@
+-include Makefile.options
+#####################################################################################
+service=airenas/icefall
+version?=dev
+docker_base_version?=torch2.4.1-cuda12.2
+docker_data_dir?=
+docker_corpus_dir?=
+docker_user?=1000:1000
+docker_mode?=-it
+# can run in detached mode  with docker_mode=-d
+ifeq ($(docker_mode),-d)
+	docker_cmd:=tail -f /dev/null
+else
+	docker_cmd:=/bin/bash
+endif
+########### DOCKER ##################################################################
+tag=$(service):$(version)
+
+dbuild:
+	docker buildx build -t $(tag) --build-arg BASE_DOCKER_VERSION=$(docker_base_version) -f Dockerfile ./ --load
+
+run:
+	docker run --gpus all --rm ${docker_mode} \
+		--name liepa3-asr \
+	  	-v $(PWD):/workspace/icefall/egs/liepa3/ASR \
+		-v $(docker_corpus_dir):/workspace/icefall/egs/liepa3/ASR/corpus \
+		-v $(docker_data_dir):/workspace/icefall/egs/liepa3/ASR/data \
+		-u $(docker_user) -e HOME=/tmp \
+		--shm-size=16g \
+		$(tag) $(docker_cmd)
+
+stop:
+	docker stop liepa3-asr || true
+
+attach:
+	docker exec -it liepa3-asr /bin/bash
+#####################################################################################
+
+.PHONY: dbuild run

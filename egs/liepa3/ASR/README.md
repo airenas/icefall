@@ -23,13 +23,18 @@ docker_user?=1001:1001
 
 ### prepare docker image
 ```bash
-make dbuild
+make -f Makefile.docker dbuild
 ```
 
 ### start docker
 ```bash
-make run d_mode=-d
-make attach
+make -f Makefile.docker run docker_mode=-d
+make -f Makefile.docker attach
+```
+
+### stop docker
+```bash
+make -f Makefile.docker stop
 ```
 
 ### on docker
