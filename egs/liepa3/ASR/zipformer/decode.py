@@ -105,7 +105,7 @@ import k2
 import sentencepiece as spm
 import torch
 import torch.nn as nn
-from lhotse import set_caching_enabled
+from lhotse import CutSet, set_caching_enabled
 
 from asr_datamodule import Liepa3AsrDataModule
 from beam_search import (
@@ -375,6 +375,13 @@ def get_parser():
         type=str2bool,
         default=False,
         help="""Skip scoring, but still save the ASR output (for eval sets).""",
+    )
+
+    parser.add_argument(
+        "--test-cut",
+        type=str,
+        default="",
+        help="""Path to a CutSet for test decoding.""",
     )
 
     add_model_arguments(parser)
@@ -1040,14 +1047,15 @@ def main():
     args.return_cuts = True
     liepa3speech = Liepa3AsrDataModule(args)
 
-    test_cuts = liepa3speech.test_cuts()
-    dev_cuts = liepa3speech.dev_cuts()
+    logging.info(f"test cut {args.test_cut}")
+    test_cuts = CutSet.from_file(args.test_cut)
+
+    cut_name = Path(args.test_cut).stem
 
     test_dl = liepa3speech.test_dataloaders(test_cuts)
-    dev_dl = liepa3speech.test_dataloaders(dev_cuts)
 
-    test_sets = ["test", "dev"]
-    test_dl = [test_dl, dev_dl]
+    test_sets = [cut_name]
+    test_dl = [test_dl]
 
     for test_set, test_dl in zip(test_sets, test_dl):
         results_dict = decode_dataset(
