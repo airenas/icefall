@@ -23,10 +23,12 @@ run:
 	docker run --gpus all --rm ${docker_mode} \
 		--name liepa3-asr \
 	  	-v $(PWD):/workspace/icefall/egs/liepa3/ASR \
+		-v $(PWD)/../../cc-100:/workspace/icefall/egs/cc-100 \
 		-v $(docker_corpus_dir):/workspace/icefall/egs/liepa3/ASR/corpus \
 		-v $(docker_data_dir):/workspace/icefall/egs/liepa3/ASR/data \
 		-u $(docker_user) -e HOME=/tmp \
 		--shm-size=16g \
+		--add-host=host.docker.internal:host-gateway \
 		$(tag) $(docker_cmd)
 
 stop:
