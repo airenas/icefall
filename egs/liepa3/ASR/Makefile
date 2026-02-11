@@ -51,20 +51,19 @@ prepare/liepa3: $(data_dir)/fbank/.train.validated $(data_dir)/fbank/.dev.valida
 train: | $(exp_dir)
 	$(python_cmd) ./zipformer/train.py   --world-size 1  --num-epochs 30   --start-epoch 1   --use-fp16 1 \
 		--exp-dir $(exp_dir) \
-		$(train_params) \
-		--max-duration 1000
+		$(train_params) 
 ##############################################################
 # Decode                     	                             #
 ##############################################################
 decode/test:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
-		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method $(decoding_method)  \
+		--exp-dir $(exp_dir) --decoding-method $(decoding_method)  \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
 decode/common-voice:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
-		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method $(decoding_method) \
+		--exp-dir $(exp_dir) --decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
