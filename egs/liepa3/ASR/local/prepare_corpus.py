@@ -43,14 +43,22 @@ def get_args():
     return parser.parse_args()
 
 
-def clean_text(param: str) -> str:
+allowed_lt = set("ąčęėįšųūž")
+
+
+def clean_text(param: str) -> (str, bool):
     """Clean the input text.
     """
 
     # remove punctuations
     res = "".join(c if c.isalnum() or c.isspace() else " " for c in param)
     # remove double spaces
-    return " ".join(res.split()).casefold()
+    res = " ".join(res.split()).casefold()
+    for c in res:
+        if c.isspace() or c.isascii() or c in allowed_lt:
+            continue
+        return "", False
+    return res, True
 
 
 def main():
@@ -100,7 +108,13 @@ def main():
 
             speaker = row["Speaker_id"]
             start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
-            text = clean_text(row["Utterance_text"])
+            text, ok = clean_text(row["Utterance_text"])
+            if not ok:
+                logging.warning(
+                    "Text contains invalid characters '%s'",
+                    row["Utterance_text"],
+                )
+                continue
 
             recordings.append(recording)
 
