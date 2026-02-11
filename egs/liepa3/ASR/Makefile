@@ -1,10 +1,13 @@
--include Makefile.options
+cfg?=Makefile.options
+-include $(cfg)
+
 LOGLEVEL?=INFO
 
 exp_dir?=data/exp/v01
 
 python_cmd=python3
 decode_limit?=0
+corpus_dir?=corpus
 
 ##############################################################
 download_dir?=data/download
@@ -60,6 +63,104 @@ $(data_dir)/fbank/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cuts_common-
 prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
 .PHONY: prepare/common-voice
 ##############################################################
+##############################################################
+### Liepa 3 prepare            ###############################
+##############################################################
+# $(data_dir)/manifests/cuts_train.jsonl.gz $(data_dir)/manifests/cuts_dev.jsonl.gz $(data_dir)/manifests/cuts_test.jsonl.gz: | $(data_dir)/manifests
+# 	$(python_cmd) local/prepare_corpus.py --corpus-dir $(corpus_dir) --transcript-file $(corpus_dir)/verified_utterances_20260121.csv \
+#           --output-dir $(data_dir)/manifests --limit-count $(limit_count)
+#     # Split train/dev/test (90/5/5)
+#     python3 local/split.py --manifest-dir data/manifests
+#     touch data/manifests/.liepa3.done
+#   fi
+# fi
+
+# # if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
+# #   log "Stage 2: Prepare musan manifest"
+# #   # We assume that you have downloaded the musan corpus
+# #   # to $dl_dir/musan
+# #   mkdir -p data/manifests
+# #   if [ ! -e data/manifests/.musan.done ]; then
+# #     lhotse prepare musan $dl_dir/musan data/manifests
+# #     touch data/manifests/.musan.done
+# #   fi
+# # fi
+
+# if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
+#   log "Stage 3: Compute fbank for liepa3"
+#   mkdir -p data/fbank
+#   if [ ! -e data/fbank/.liepa3.done ]; then
+#     ./local/compute_fbank_liepa3.py
+#     touch data/fbank/.liepa3.done
+#   fi
+
+#   # if [ ! -f data/fbank/liepa3_cuts_train-all-shuf.jsonl.gz ]; then
+#   #   cat <(gunzip -c data/fbank/liepa3_cuts_train-clean-100.jsonl.gz) \
+#   #     <(gunzip -c data/fbank/liepa3_cuts_train-clean-360.jsonl.gz) \
+#   #     <(gunzip -c data/fbank/liepa3_cuts_train-other-500.jsonl.gz) | \
+#   #     shuf | gzip -c > data/fbank/liepa3_cuts_train-all-shuf.jsonl.gz
+#   # fi
+
+#   if [ ! -e data/fbank/.liepa3-validated.done ]; then
+#     log "Validating data/fbank for liepa3"
+#     parts=(
+#       train
+#       test
+#       dev
+#     )
+#     for part in ${parts[@]}; do
+#       python3 ./local/validate_manifest.py \
+#         data/fbank/cuts_${part}.jsonl.gz
+#     done
+#     touch data/fbank/.liepa3-validated.done
+#   fi
+# fi
+
+# # if [ $stage -le 4 ] && [ $stop_stage -ge 4 ]; then
+# #   log "Stage 4: Compute fbank for musan"
+# #   mkdir -p data/fbank
+# #   if [ ! -e data/fbank/.musan.done ]; then
+# #     ./local/compute_fbank_musan.py
+# #     touch data/fbank/.musan.done
+# #   fi
+# # fi
+
+# if [ $stage -le 5 ] && [ $stop_stage -ge 5 ]; then
+#   log "Stage 5: Prepare BPE based lang"
+
+#   for vocab_size in ${vocab_sizes[@]}; do
+#     lang_dir=data/lang_bpe_${vocab_size}
+#     mkdir -p $lang_dir
+#     python3 local/prepare_texts.py --input-file data/manifests/cuts_train.jsonl.gz --output-file $lang_dir/transcript_words.txt
+
+#     # if [ ! -f $lang_dir/transcript_words.txt ]; then
+#     #   log "Generate data for BPE training"
+#     #   files=$(
+#     #     find "$dl_dir/liepa3/train-clean-100" -name "*.trans.txt"
+#     #     find "$dl_dir/liepa3/train-clean-360" -name "*.trans.txt"
+#     #     find "$dl_dir/liepa3/train-other-500" -name "*.trans.txt"
+#     #   )
+#     #   for f in ${files[@]}; do
+#     #     cat $f | cut -d " " -f 2-
+#     #   done > $lang_dir/transcript_words.txt
+#     # fi
+
+#     if [ ! -f $lang_dir/bpe.model ]; then
+#       ./local/train_bpe_model.py \
+#         --lang-dir $lang_dir \
+#         --vocab-size $vocab_size \
+#         --transcript $lang_dir/transcript_words.txt
+#     fi
+#   done
+# fi
+
+
+
+
+
+
+
+
 
 
 ##############################################################
@@ -67,12 +168,12 @@ prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
 ##############################################################
 decode/test:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
-		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
+		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method $(decoding_method)  \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
 decode/common-voice:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
-		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
+		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
 ##############################################################
