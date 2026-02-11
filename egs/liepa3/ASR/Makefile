@@ -7,6 +7,7 @@ exp_dir?=data/exp/v01
 
 python_cmd=python3
 decode_limit?=0
+limit_count?=100000000000000
 
 corpus_dir?=corpus
 
