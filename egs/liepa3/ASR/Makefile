@@ -68,12 +68,12 @@ prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
 decode/test:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
 		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
-		--beam-size 4 --decode_limit $(decode_limit) \
+		--beam-size 4 --decode-limit $(decode_limit) \
 		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
 decode/common-voice:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
 		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
-		--beam-size 4 --decode_limit $(decode_limit) \
+		--beam-size 4 --decode-limit $(decode_limit) \
 		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
 ##############################################################
 ##############################################################
