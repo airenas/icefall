@@ -54,7 +54,7 @@ $(data_dir)/manifests/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cv-lt_su
     	$(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz \
     	$@
 $(data_dir)/fbank/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cuts_common-voice.jsonl.gz  | $(data_dir)/fbank
-    $(python_cmd) ./local/compute_fbank.py --input-cuts $(data_dir)/manifests/cuts_common-voice.jsonl.gz --output-dir $(data_dir)/fbank \
+	$(python_cmd) ./local/compute_fbank.py --input-cuts $(data_dir)/manifests/cuts_common-voice.jsonl.gz --output-dir $(data_dir)/fbank \
 		--partition cv-lt-test --perturb-speed False
 ##############################################################
 prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
