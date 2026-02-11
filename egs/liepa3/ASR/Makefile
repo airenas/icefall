@@ -1,6 +1,8 @@
 -include Makefile.options
 LOGLEVEL?=INFO
 
+exp_dir?=data/exp/v01
+
 python_cmd=python3
 ##############################################################
 download_dir?=data/download
@@ -44,13 +46,28 @@ $(download_dir)/.common-voice.dwn: ${download_dir}/${common_voice_gz} | $(downlo
 	touch $@	
 $(data_dir)/manifests/cv-lt_supervisions_test.jsonl.gz: $(download_dir)/.common-voice.dwn | $(data_dir)/manifests
 	lhotse prepare commonvoice $(download_dir)/common_voice/$(common_voice_extr_dir) $(data_dir)/manifests --language=lt --split=test
-$(data_dir)/manifests/common-voice_cuts.jsonl.gz:$(data_dir)/manifests/cv-lt_supervisions_test.jsonl.gz
+$(data_dir)/manifests/uts_common-voice.jsonl.gz: $(data_dir)/manifests/cv-lt_supervisions_test.jsonl.gz
 	$(python_cmd) ./local/prepare_common_voice.py --input $< --output $(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz
 	lhotse combine $(data_dir)/manifests/cv-lt_recordings_test.jsonl.gz \
     	$(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz \
     	$@
 ##############################################################
 prepare/common-voice: $(data_dir)/manifests/common-voice_cuts.jsonl.gz
+.PHONY: prepare/common-voice
+##############################################################
+
+
+##############################################################
+### Decode                     ###############################
+##############################################################
+decode/test:
+	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
+		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
+		--beam-size 4 \
+		--test-cut $(data_dir)/manifests/cuts_test.jsonl.gz
+	
+##############################################################
+prepare/common-voice: $(data_dir)/manifests/cuts_common-voice.jsonl.gz
 .PHONY: prepare/common-voice
 ##############################################################
 .EXPORT_ALL_VARIABLES:

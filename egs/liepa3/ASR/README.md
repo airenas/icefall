@@ -52,7 +52,7 @@ tail -f data/pr.log
 nohup ./zipformer/train.py   --world-size 1  --num-epochs 30   --start-epoch 1   --use-fp16 1   --exp-dir data/exp/v01   --max-duration 1000 > data/tr.log &
 
 ### decode
-./zipformer/decode.py  --epoch 30  --avg 15  --exp-dir data/exp/v01   --max-duration 1000 --decoding-method modified_beam_search  -beam-size 4 
+./zipformer/decode.py  --epoch 30  --avg 15  --exp-dir data/exp/v01   --max-duration 1000 --decoding-method modified_beam_search  --beam-size 4 
 
 ```
 

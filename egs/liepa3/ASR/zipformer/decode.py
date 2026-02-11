@@ -380,7 +380,7 @@ def get_parser():
     parser.add_argument(
         "--test-cut",
         type=str,
-        default="",
+        required=True,
         help="""Path to a CutSet for test decoding.""",
     )
 
