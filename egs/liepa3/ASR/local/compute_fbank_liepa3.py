@@ -51,6 +51,18 @@ def get_args():
         default=True,
         help="""Perturb speed with factor 0.9 and 1.1 on train subset.""",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="data/fbank",
+        help="Output directory. Default: data/fbank.",
+    )
+    parser.add_argument(
+        "--input-dir",
+        type=str,
+        default="data/manifest",
+        help="Input directory. Default: data/manifests.",
+    )
 
     return parser.parse_args()
 
@@ -59,9 +71,11 @@ def compute_fbank_liepa3(
         bpe_model: Optional[str] = None,
         dataset: Optional[str] = None,
         perturb_speed: Optional[bool] = True,
+        input_dir: str = "data/manifests",
+        output_dir: str = "data/fbank",
 ):
-    src_dir = Path("data/manifests")
-    output_dir = Path("data/fbank")
+    src_dir = Path(input_dir)
+    output_dir = Path(output_dir)
     num_jobs = min(30, os.cpu_count())
     num_mel_bins = 80
 
@@ -105,9 +119,7 @@ def compute_fbank_liepa3(
                 raise RuntimeError(f"{cuts_file} not found - skipping")
 
             cuts_filename = f"cuts_{partition}.{suffix}"
-            if (output_dir / cuts_filename).is_file():
-                logging.info(f"{partition} already exists - skipping.")
-                continue
+
             logging.info(f"Processing {partition}")
             cut_set = CutSet.from_file(cuts_file)
 
@@ -129,6 +141,7 @@ def compute_fbank_liepa3(
                 executor=ex,
                 storage_type=LilcomChunkyWriter,
             )
+            logging.info(f"Saving {len(cut_set)} cuts to {output_dir / cuts_filename}")
             cut_set.to_file(output_dir / cuts_filename)
 
 
@@ -143,6 +156,8 @@ if __name__ == "__main__":
         bpe_model=args.bpe_model,
         dataset=args.dataset,
         perturb_speed=args.perturb_speed,
+        input_dir=args.input_dir,
+        output_dir=args.output_dir,
     )
 
     logging.info("Done")

@@ -8,6 +8,8 @@ from pathlib import Path
 from lhotse import RecordingSet, SupervisionSet, CutSet, Recording, SupervisionSegment
 from tqdm import tqdm
 
+from text_utils import clean_text
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -41,24 +43,6 @@ def get_args():
     )
 
     return parser.parse_args()
-
-
-allowed_lt = set("ąčęėįšųūž")
-
-
-def clean_text(param: str) -> (str, bool):
-    """Clean the input text.
-    """
-
-    # remove punctuations
-    res = "".join(c if c.isalnum() or c.isspace() else " " for c in param)
-    # remove double spaces
-    res = " ".join(res.split()).casefold()
-    for c in res:
-        if c.isspace() or c.isascii() or c in allowed_lt:
-            continue
-        return "", False
-    return res, True
 
 
 def main():
