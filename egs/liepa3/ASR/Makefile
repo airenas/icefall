@@ -4,6 +4,8 @@ LOGLEVEL?=INFO
 exp_dir?=data/exp/v01
 
 python_cmd=python3
+decode_limit?=0
+
 ##############################################################
 download_dir?=data/download
 data_dir?=data
@@ -51,8 +53,11 @@ $(data_dir)/manifests/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cv-lt_su
 	lhotse combine $(data_dir)/manifests/cv-lt_recordings_test.jsonl.gz \
     	$(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz \
     	$@
+$(data_dir)/fbank/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cuts_common-voice.jsonl.gz  | $(data_dir)/fbank
+    $(python_cmd) ./local/compute_fbank.py --input-cuts $(data_dir)/manifests/cuts_common-voice.jsonl.gz --output-dir $(data_dir)/fbank \
+		--partition cv-lt-test --perturb-speed False
 ##############################################################
-prepare/common-voice: $(data_dir)/manifests/cuts_common-voice.jsonl.gz
+prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
 .PHONY: prepare/common-voice
 ##############################################################
 
@@ -63,9 +68,13 @@ prepare/common-voice: $(data_dir)/manifests/cuts_common-voice.jsonl.gz
 decode/test:
 	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
 		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
-		--beam-size 4 \
-		--test-cut $(data_dir)/manifests/cuts_test.jsonl.gz
-	
+		--beam-size 4 --decode_limit $(decode_limit) \
+		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
+decode/common-voice:
+	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
+		--exp-dir $(exp_dir) --max-duration 1000 --decoding-method modified_beam_search  \
+		--beam-size 4 --decode_limit $(decode_limit) \
+		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
 ##############################################################
 ##############################################################
 .EXPORT_ALL_VARIABLES:

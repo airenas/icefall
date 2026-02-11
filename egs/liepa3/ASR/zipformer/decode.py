@@ -383,6 +383,13 @@ def get_parser():
         required=True,
         help="""Path to a CutSet for test decoding.""",
     )
+    parser.add_argument(
+        "--decode_limit",
+        type=int,
+        default=0,
+        help="""Limit the number of utterances to decode.""",
+    )
+    
 
     add_model_arguments(parser)
 
@@ -1049,6 +1056,8 @@ def main():
 
     logging.info(f"test cut {args.test_cut}")
     test_cuts = CutSet.from_file(args.test_cut)
+    if params.decode_limit > 0:
+        test_cuts = test_cuts[:params.decode_limit]
 
     cut_name = Path(args.test_cut).stem
 
