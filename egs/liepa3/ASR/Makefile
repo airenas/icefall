@@ -50,11 +50,11 @@ $(data_dir)/manifests/cv-lt_supervisions_test.jsonl.gz: $(download_dir)/.common-
 	lhotse prepare commonvoice $(download_dir)/common_voice/$(common_voice_extr_dir) $(data_dir)/manifests --language=lt --split=test
 $(data_dir)/manifests/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cv-lt_supervisions_test.jsonl.gz
 	$(python_cmd) ./local/prepare_common_voice.py --input $< --output $(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz
-	lhotse combine $(data_dir)/manifests/cv-lt_recordings_test.jsonl.gz \
-    	$(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz \
+	lhotse cut simple -r $(data_dir)/manifests/cv-lt_recordings_test.jsonl.gz \
+    	-s $(data_dir)/manifests/cv-lt_supervisions_test_norm.jsonl.gz \
     	$@
 $(data_dir)/fbank/cuts_common-voice.jsonl.gz: $(data_dir)/manifests/cuts_common-voice.jsonl.gz  | $(data_dir)/fbank
-	$(python_cmd) ./local/compute_fbank.py --input-cuts $(data_dir)/manifests/cuts_common-voice.jsonl.gz --output-dir $(data_dir)/fbank \
+	$(python_cmd) ./local/compute_fbank.py --cuts $(data_dir)/manifests/cuts_common-voice.jsonl.gz --output-dir $(data_dir)/fbank \
 		--partition cv-lt-test --perturb-speed False
 ##############################################################
 prepare/common-voice: $(data_dir)/fbank/cuts_common-voice.jsonl.gz
