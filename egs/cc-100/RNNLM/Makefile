@@ -26,34 +26,75 @@ $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 $(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt	
 	$(python_cmd) ./local/to_sentences.py --input $< --output $@ --splitter-url http://host.docker.internal:$(lex_port)
 
-$(data_dir)/lt.clean.txt: $(data_dir)/lt.sentences.txt	
-	$(python_cmd) ./local/clean.py --input $< --output $@ 
-
+###################################################################
+### lex docker must be started on host
 start/lex:
 	docker run --rm -it -p $(lex_port):8080 --name lex semantikadocker.vdu.lt/lex:2021.04.02
+###################################################################
+prepare/cc-100: $(data_dir)/lt.sentences.txt
+.PHONY: prepare/cc-100
+###################################################################
+$(data_dir)/lt.clean.txt: # $(data_dir)/lt.sentences.txt	
+	$(python_cmd) ./local/clean.py --input $(data_dir)/lt.sentences.txt --output $@ 
 
+## split $(data_dir)/lt.clean.txt into train/dev/test 90/5/5
 $(data_dir)/lt.train.txt $(data_dir)/lt.dev.txt $(data_dir)/lt.test.txt: $(data_dir)/lt.clean.txt	
 	$(python_cmd) ./local/split.py --input $< --output-template $(data_dir)/lt.{}.txt
 
-
-$(data_dir)/lt.%.dt: $(data_dir)/lt.%.txt
+## ### k2 preparation
+$(data_dir)/lt.%.pt: $(data_dir)/lt.%.txt
 	$(python_cmd) ./local/prepare_lm_training_data.py \
     --bpe-model $(bpe_model) \
     --lm-data $< \
     --lm-archive $@	
 
-$(data_dir)/lt.%.sorted.dt: $(data_dir)/lt.%.dt
+$(data_dir)/lt.%.sorted.pt: $(data_dir)/lt.%.pt
 	$(python_cmd) ./local/sort_lm_training_data.py \
     --in-lm-data $< \
     --out-lm-data $@ \
     --out-statistics $(data_dir)/lt.$*.stats.txt
 
-prepare: $(data_dir)/lt.train.sorted.dt $(data_dir)/lt.dev.sorted.dt $(data_dir)/lt.test.sorted.dt
+prepare: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt $(data_dir)/lt.test.sorted.pt
 .PHONY: prepare
 ###################################################################
-## just before download
-clean:
+rnn_lm: 
+	ln -s ../../../icefall/rnn_lm rnn_lm
+### k2 training
+$(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | rnn_lm
+	$(python_cmd) ./rnn_lm/train.py \
+    --world-size 1 \
+    --exp-dir $(exp_dir) \
+    --start-epoch 0 \
+    --num-epochs 10 \
+    --use-fp16 0 \
+    --tie-weights 1 \
+    --embedding-dim 2048 \
+    --hidden-dim 2048 \
+    --num-layers 3 \
+    --batch-size 300 \
+    --lm-data $(data_dir)/lt.train.sorted.pt \
+    --lm-data-valid $(data_dir)/lt.dev.sorted.pt
+	touch $@
+train: $(exp_dir)/.done
+.PHONY: train	
+###################################################################
+calc/perplexity: $(exp_dir)/.done
+	$(python_cmd) ./rnn_lm/compute_perplexity.py \
+	--exp-dir $(exp_dir) \
+    --epoch 10 \
+    --avg 2 \
+	--embedding-dim 2048 \
+    --hidden-dim 2048 \
+    --num-layers 3 \
+    --batch-size 300 \
+    --lm-data $(data_dir)/lt.test.sorted.pt
+.PHONY: calc/perplexity
+###################################################################
+## just clean data after download
+clean/cc-100:
 	rm -f $(data_dir)/lt.ready.txt
+.PHONY: clean/cc-100
+###################################################################
 
 .EXPORT_ALL_VARIABLES:
 
