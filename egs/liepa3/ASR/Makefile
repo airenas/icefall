@@ -10,7 +10,7 @@ decode_limit?=0
 limit_count?=100000000000000
 
 corpus_dir?=corpus
---start-epoch?=1
+start_epoch?=1
 
 ##############################################################
 download_dir?=data/download
@@ -50,7 +50,7 @@ prepare/liepa3: $(data_dir)/fbank/.train.validated $(data_dir)/fbank/.dev.valida
 # Train                                                      #
 ##############################################################
 train: | $(exp_dir)
-	$(python_cmd) ./zipformer/train.py --world-size 1 --num-epochs 30 --start-epoch $(start-epoch) --use-fp16 1 \
+	$(python_cmd) ./zipformer/train.py --world-size 1 --num-epochs 30 --start-epoch $(start_epoch) --use-fp16 1 \
 		--exp-dir $(exp_dir) \
 		$(train_params) 
 ##############################################################
