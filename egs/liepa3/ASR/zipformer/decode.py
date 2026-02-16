@@ -716,6 +716,11 @@ def decode_dataset(
 
         for name, hyps in hyps_dict.items():
             this_batch = []
+            if len(hyps) != len(texts):
+                logging.info(f"Number of hyps: {len(hyps)}, Number of texts: {len(texts)}")
+                for i, (h, t) in enumerate(zip(hyps, texts)):
+                    if not h:
+                        logging.info(f"Empty hyp at index {i}, text: {t}")
             assert len(hyps) == len(texts)
             for cut_id, hyp_words, ref_text in zip(cut_ids, hyps, texts):
                 ref_words = ref_text.split()
