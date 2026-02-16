@@ -12,6 +12,9 @@ limit_count?=100000000000000
 corpus_dir?=corpus
 start_epoch?=1
 
+epoch?=30
+avg?=15
+
 ##############################################################
 download_dir?=data/download
 data_dir?=data
@@ -50,24 +53,48 @@ prepare/liepa3: $(data_dir)/fbank/.train.validated $(data_dir)/fbank/.dev.valida
 # Train                                                      #
 ##############################################################
 train: | $(exp_dir)
-	$(python_cmd) ./zipformer/train.py --world-size 1 --num-epochs 30 --start-epoch $(start_epoch) --use-fp16 1 \
+	$(python_cmd) ./zipformer/train.py --world-size 1 --num-epochs $(epoch) --start-epoch $(start_epoch) --use-fp16 1 \
 		--exp-dir $(exp_dir) \
 		$(train_params) 
 ##############################################################
 # Decode                     	                             #
 ##############################################################
 decode/test:
-	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
+	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --decoding-method $(decoding_method)  \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
 decode/common-voice:
-	$(python_cmd) ./zipformer/decode.py  --epoch 30  --avg 15  \
+	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
+##############################################################
+# ONNX                     	                             #
+##############################################################
+onnx/export:
+	$(python_cmd) ./zipformer/export-onnx-ctc.py \
+		--tokens $(lang_dir)/tokens.txt \
+		--exp-dir $(exp_dir) \
+		--use-averaged-model 1 \
+		--epoch $(epoch) \
+		--avg $(avg) \
+		--query-head-dim 32 \
+		--value-head-dim 12 \
+		--decoder-dim 512 \
+		--joiner-dim 512 \
+		--causal False \
+		--chunk-size 16 \
+		$(export_params) \
+		--left-context-frames 128
+
+onnx/decode-wav:
+	$(python_cmd) ./zipformer/onnx_pretrained_ctc.py \
+		--nn-model $(exp_dir)/model.onnx \
+		--tokens $(lang_dir)/tokens.txt \
+		$(wavs)
 ##############################################################
 ##############################################################
 # CommonVoice LT Test Corpus 								 #
