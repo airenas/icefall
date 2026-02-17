@@ -160,6 +160,20 @@ def get_parser():
         help="Whether to export models in fp16",
     )
 
+    parser.add_argument(
+        "--version",
+        type=str,
+        default="0.1",
+        help="Version of the model. It is added to the meta data of the exported ONNX model.",
+    )
+
+    parser.add_argument(
+        "--author",
+        type=str,
+        default="VDU ASR Team",
+        help="Author of the model. It is added to the meta data of the exported ONNX model.",
+    )
+
     add_model_arguments(parser)
 
     return parser
@@ -244,6 +258,8 @@ def export_ctc_model_onnx(
     model: OnnxModel,
     filename: str,
     opset_version: int = 11,
+    version: str = "0.1",
+    author: str = "VDU ASR Team",
 ) -> None:
     """Export the given model to ONNX format.
     The exported model has two inputs:
@@ -287,8 +303,8 @@ def export_ctc_model_onnx(
 
     meta_data = {
         "model_type": "zipformer2_ctc",
-        "version": "1",
-        "model_author": "k2-fsa",
+        "version": version,
+        "model_author": author,
         "comment": "non-streaming zipformer2 CTC",
     }
     logging.info(f"meta_data: {meta_data}")
@@ -318,6 +334,8 @@ def main():
 
     logging.info("About to create model")
     model = get_model(params)
+
+    logging.info(f"Model version: {params.version} author: {params.author}")
 
     model.to(device)
 
@@ -428,6 +446,8 @@ def main():
         model,
         filename,
         opset_version=opset_version,
+        version=params.version,
+        author=params.author,
     )
     logging.info(f"Exported to {filename}")
 
