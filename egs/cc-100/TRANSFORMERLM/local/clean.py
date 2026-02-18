@@ -5,15 +5,7 @@ import os
 
 from tqdm import tqdm
 
-
-def clean_text(param: str) -> str:
-    """Clean the input text.
-    """
-
-    # remove punctuations
-    res = "".join(c if c.isalnum() or c.isspace() else " " for c in param)
-    # remove double spaces
-    return " ".join(res.split()).casefold()
+from shared.text_utils import clean_text
 
 
 def get_args():
@@ -63,8 +55,8 @@ def main():
                 if skip(line):
                     skipped += 1
                     continue
-                cleaned = clean_text(line)
-                if not cleaned:
+                cleaned, ok = clean_text(line)
+                if not ok or len(cleaned) < 10: # skip too short sentences, perhaps bad splitting into sentences
                     skipped += 1
                     continue
                 wrote += 1

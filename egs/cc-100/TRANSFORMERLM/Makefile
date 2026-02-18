@@ -23,9 +23,9 @@ $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 	head -n $(limit) $(data_dir)/lt.txt > $@_
 	mv $@_ $@	
 
-$(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt	
-	$(python_cmd) ./local/to_sentences.py --input $< --output $@ --splitter-url http://host.docker.internal:$(lex_port)
-
+$(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
+	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url http://host.docker.internal:$(lex_port)
+	mv $@_ $@
 ###################################################################
 ### lex docker must be started on host
 start/lex:
@@ -57,20 +57,18 @@ $(data_dir)/lt.%.sorted.pt: $(data_dir)/lt.%.pt
 prepare: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt $(data_dir)/lt.test.sorted.pt
 .PHONY: prepare
 ###################################################################
-rnn_lm: 
-	ln -s ../../../icefall/rnn_lm rnn_lm
+transformer_lm: 
+	ln -s ../../../icefall/transformer_lm transformer_lm
 ### k2 training
-$(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | rnn_lm
-	$(python_cmd) ./rnn_lm/train.py \
+$(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | transformer_lm
+	$(python_cmd) ./transformer_lm/train.py \
     --world-size 1 \
     --exp-dir $(exp_dir) \
     --start-epoch 0 \
     --num-epochs 10 \
     --use-fp16 0 \
+    --num-layers 12 \
     --tie-weights 1 \
-    --embedding-dim 2048 \
-    --hidden-dim 2048 \
-    --num-layers 3 \
     --batch-size 300 \
     --lm-data $(data_dir)/lt.train.sorted.pt \
     --lm-data-valid $(data_dir)/lt.dev.sorted.pt
@@ -79,7 +77,7 @@ train: $(exp_dir)/.done
 .PHONY: train	
 ###################################################################
 calc/perplexity: $(exp_dir)/.done
-	$(python_cmd) ./rnn_lm/compute_perplexity.py \
+	$(python_cmd) ./transformer_lm/compute_perplexity.py \
 	--exp-dir $(exp_dir) \
     --epoch 10 \
     --avg 2 \

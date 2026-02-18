@@ -1,4 +1,4 @@
-# RNNLM scripts for CC-100 (LT)
+# TransformerLM scripts for CC-100 (LT)
 
 ## Overview
 
@@ -20,10 +20,10 @@ Prepare Makefile.options. Example:
 
 ```Makefile
 ## datasets preparation dir
-data_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm
+data_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm
 
 ## lm model output
-exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm/v01
+exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm/v01
 
 ## limit for testing sample run
 ## limit=500000 #
@@ -50,23 +50,20 @@ make -f Makefile.docker run
 #### On docker container
 
 ```bash
+cd cc-100/TRANSFORMERLM
 make prepare/cc-100 prepare
 ```
 
 
 ### Training
 
-#### Start docker for running scripts
-```bash
-cd ../../liepa3/ASR/
-make -f Makefile.docker run
-```
 #### On docker container
 
 ```bash
-make train
+cd cc-100/TRANSFORMERLM
+make prepare/cc-100 prepare
 ```
 
 The model will be saved to the location configured in Makefile.options:
-`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm/v01`
+`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm/v01`
 
