@@ -61,13 +61,15 @@ train: | $(exp_dir)
 ##############################################################
 decode/test:
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
-		--exp-dir $(exp_dir) --decoding-method $(decoding_method)  \
+		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
+		--decoding-method $(decoding_method)  \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
 decode/common-voice:
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
-		--exp-dir $(exp_dir) --decoding-method $(decoding_method) \
+		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
+		--decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
