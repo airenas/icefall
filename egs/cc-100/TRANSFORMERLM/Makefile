@@ -29,7 +29,7 @@ $(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
 ###################################################################
 ### lex docker must be started on host
 start/lex:
-	docker run --rm -it -p $(lex_port):8080 --name lex semantikadocker.vdu.lt/lex:2021.04.02
+	docker run --rm -it -p $(lex_port):8080 --log-driver=none --name lex semantikadocker.vdu.lt/lex:2021.04.02
 ###################################################################
 prepare/cc-100: $(data_dir)/lt.sentences.txt
 .PHONY: prepare/cc-100
