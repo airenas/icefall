@@ -123,14 +123,17 @@ def main():
             if seek:
                 logging.info(f"Seeking input: {args.input} from {seek}")
                 f.seek(seek)
-            for line in tqdm(f, total=total, unit="B", unit_scale=True, initial=seek, desc="Reading file"):
-                line = line.rstrip("\n")
-                data.append(line)
+            with tqdm(total=total, initial=seek , unit="B", unit_scale=True, desc="Splitting into sentences") as pbar:
+                for line in f:
+                    pbar.update(len(line.encode("utf-8")))
 
-                # If single line is bigger than MAX_CHARS → flush first
-                if len(data.buffer) > MAX_CHARS:
-                    sentences = split(args.splitter_url, data, False)
-                    wrote += write_out(f_out, sentences)
+                    line = line.rstrip("\n")
+                    data.append(line)
+
+                    # If single line is bigger than MAX_CHARS → flush first
+                    if len(data.buffer) > MAX_CHARS:
+                        sentences = split(args.splitter_url, data, False)
+                        wrote += write_out(f_out, sentences)
 
             # send remaining data
             if data.buffer:
