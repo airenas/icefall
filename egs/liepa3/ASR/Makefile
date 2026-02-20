@@ -61,20 +61,20 @@ train: | $(exp_dir)
 ##############################################################
 # Decode                     	                             #
 ##############################################################
-decode/test: ./decode/cuts_test.jsonl.gz
+decode/test: .decode/cuts_test.jsonl.gz
 .PHONY: decode/test
 
 decode/common-voice: .decode/cuts_common-voice.jsonl.gz
-.PHONY: decode/test decode/common-voice		
+.PHONY: decode/common-voice		
 
-.decode/%:
+.decode/%: $(data_dir)/fbank/%
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
 		$(lm_params) \
-		--test-cut $(data_dir)/fbank/$*
+		--test-cut $<
 ##############################################################
 # ONNX                     	                             #
 ##############################################################
