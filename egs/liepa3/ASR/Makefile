@@ -20,6 +20,8 @@ download_dir?=data/download
 data_dir?=data
 vocab_size?=500
 lang_dir=$(data_dir)/lang_bpe_${vocab_size}
+lm_params?=
+
 $(download_dir) $(data_dir)/manifests $(data_dir)/fbank \
 	$(download_dir)/common_voice $(lang_dir) $(exp_dir):
 	mkdir -p $@
@@ -59,20 +61,20 @@ train: | $(exp_dir)
 ##############################################################
 # Decode                     	                             #
 ##############################################################
-decode/test:
-	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
-		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
-		--decoding-method $(decoding_method)  \
-		--beam-size 4 --decode-limit $(decode_limit) \
-		$(decode_params) \
-		--test-cut $(data_dir)/fbank/cuts_test.jsonl.gz
-decode/common-voice:
+decode/test: ./decode/cuts_test.jsonl.gz
+.PHONY: decode/test
+
+decode/common-voice: .decode/cuts_common-voice.jsonl.gz
+.PHONY: decode/test decode/common-voice		
+
+.decode/%:
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
 		--beam-size 4 --decode-limit $(decode_limit) \
 		$(decode_params) \
-		--test-cut $(data_dir)/fbank/cuts_common-voice.jsonl.gz	
+		$(lm_params) \
+		--test-cut $(data_dir)/fbank/$*
 ##############################################################
 # ONNX                     	                             #
 ##############################################################
