@@ -28,6 +28,12 @@ def get_args():
         help="""Output file
             """,
     )
+    parser.add_argument(
+        "--continue-if-exists",
+        action="store_true",
+        help="""Continue output file even if splitter fails for some input. Default: False.
+                """,
+    )
 
     return parser.parse_args()
 
@@ -53,6 +59,10 @@ class Data:
                 break
             take_chars = i_from + count
             res.append(self.buffer[i_from:i_from + count].strip())
+        if take_chars == 0:
+            logging.warning(f"take_chars is 0, s: {s}, drop buffer!!!!!")
+            take_chars = len(self.buffer)
+
         self.buffer = self.buffer[take_chars:]
         return res
 
@@ -98,9 +108,22 @@ def main():
     data = Data()
     wrote = 0
 
-    with open(args.output, "w", encoding="utf-8") as f_out:
+    open_mode = "w"
+    seek = 0
+    if os.path.exists(args.output):
+        if args.continue_if_exists:
+            logging.warning(f"Output file {args.output} already exists, but we will continue writing to it.")
+            open_mode = "a"
+            seek = os.path.getsize(args.output)
+
+    logging.info(f"Output file: {args.output}, open mode: {open_mode}")
+    with open(args.output, open_mode, encoding="utf-8") as f_out:
+        total = os.path.getsize(args.input)
         with open(args.input, "r", encoding="utf-8") as f:
-            for line in tqdm(f, desc="Reading file"):
+            if seek:
+                logging.info(f"Seeking input: {args.input} from {seek}")
+                f.seek(seek)
+            for line in tqdm(f, total=total, unit="B", unit_scale=True, initial=seek, desc="Reading file"):
                 line = line.rstrip("\n")
                 data.append(line)
 

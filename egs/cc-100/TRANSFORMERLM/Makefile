@@ -24,7 +24,8 @@ $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 	mv $@_ $@	
 
 $(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
-	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url http://host.docker.internal:$(lex_port)
+	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url http://host.docker.internal:$(lex_port) \
+		--continue-if-exists
 	mv $@_ $@
 ###################################################################
 ### lex docker must be started on host
