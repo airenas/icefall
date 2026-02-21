@@ -33,19 +33,19 @@ import logging
 import math
 from pathlib import Path
 from shutil import copyfile
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import torch
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.optim as optim
-from dataset import get_dataloader
 from lhotse.utils import fix_random_seed
-from model import TransformerLM
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
+from dataset import get_dataloader
 from icefall.checkpoint import load_checkpoint
 from icefall.checkpoint import save_checkpoint as save_checkpoint_impl
 from icefall.dist import cleanup_dist, setup_dist
@@ -57,6 +57,7 @@ from icefall.utils import (
     str2bool,
     torch_autocast,
 )
+from model import TransformerLM
 
 
 def get_parser():
@@ -191,6 +192,7 @@ def get_params() -> AttributeDict:
             "log_interval": 200,
             "reset_interval": 2000,
             "valid_interval": 1000,
+            "save_checkpoint_interval": 30000,
             "nhead": 8,
             "embedding_dim": 768,
             "encoder_dim": 768,
@@ -203,11 +205,12 @@ def get_params() -> AttributeDict:
 
 
 def load_checkpoint_if_available(
-    params: AttributeDict,
-    model: nn.Module,
-    optimizer: Optional[torch.optim.Optimizer] = None,
-    scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-) -> None:
+        params: AttributeDict,
+        model: nn.Module,
+        optimizer: Optional[torch.optim.Optimizer] = None,
+        scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        file_name: Optional[str] = None,
+) -> Optional[dict[str, Any]]:
     """Load checkpoint from file.
 
     If params.start_epoch is positive, it will load the checkpoint from
@@ -230,9 +233,12 @@ def load_checkpoint_if_available(
       Return None.
     """
     if params.start_epoch <= 0:
-        return
+        return None
 
-    filename = params.exp_dir / f"epoch-{params.start_epoch-1}.pt"
+    if file_name is not None:
+        filename = params.exp_dir / file_name
+    else:
+        filename = params.exp_dir / f"epoch-{params.start_epoch - 1}.pt"
     logging.info(f"Loading checkpoint: {filename}")
     saved_params = load_checkpoint(
         filename,
@@ -255,11 +261,12 @@ def load_checkpoint_if_available(
 
 
 def save_checkpoint(
-    params: AttributeDict,
-    model: nn.Module,
-    optimizer: Optional[torch.optim.Optimizer] = None,
-    scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-    rank: int = 0,
+        params: AttributeDict,
+        model: nn.Module,
+        optimizer: Optional[torch.optim.Optimizer] = None,
+        scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        rank: int = 0,
+        file_name: Optional[str] = None,
 ) -> None:
     """Save model, optimizer, scheduler and training stats to file.
 
@@ -271,7 +278,10 @@ def save_checkpoint(
     """
     if rank != 0:
         return
-    filename = params.exp_dir / f"epoch-{params.cur_epoch}.pt"
+    if file_name is not None:
+        filename = params.exp_dir / file_name
+    else:
+        filename = params.exp_dir / f"epoch-{params.cur_epoch}.pt"
     save_checkpoint_impl(
         filename=filename,
         model=model,
@@ -281,21 +291,22 @@ def save_checkpoint(
         rank=rank,
     )
 
-    if params.best_train_epoch == params.cur_epoch:
-        best_train_filename = params.exp_dir / "best-train-loss.pt"
-        copyfile(src=filename, dst=best_train_filename)
+    if file_name is None:
+        if params.best_train_epoch == params.cur_epoch:
+            best_train_filename = params.exp_dir / "best-train-loss.pt"
+            copyfile(src=filename, dst=best_train_filename)
 
-    if params.best_valid_epoch == params.cur_epoch:
-        best_valid_filename = params.exp_dir / "best-valid-loss.pt"
-        copyfile(src=filename, dst=best_valid_filename)
+        if params.best_valid_epoch == params.cur_epoch:
+            best_valid_filename = params.exp_dir / "best-valid-loss.pt"
+            copyfile(src=filename, dst=best_valid_filename)
 
 
 def compute_loss(
-    model: nn.Module,
-    x: torch.Tensor,
-    y: torch.Tensor,
-    sentence_lengths: torch.Tensor,
-    is_training: bool,
+        model: nn.Module,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        sentence_lengths: torch.Tensor,
+        is_training: bool,
 ) -> Tuple[torch.Tensor, MetricsTracker]:
     """Compute the negative log-likelihood loss given a model and its input.
     Args:
@@ -333,10 +344,10 @@ def compute_loss(
 
 
 def compute_validation_loss(
-    params: AttributeDict,
-    model: nn.Module,
-    valid_dl: torch.utils.data.DataLoader,
-    world_size: int = 1,
+        params: AttributeDict,
+        model: nn.Module,
+        valid_dl: torch.utils.data.DataLoader,
+        world_size: int = 1,
 ) -> MetricsTracker:
     """Run the validation process. The validation loss
     is saved in `params.valid_loss`.
@@ -371,13 +382,13 @@ def compute_validation_loss(
 
 
 def train_one_epoch(
-    params: AttributeDict,
-    model: nn.Module,
-    optimizer: torch.optim.Optimizer,
-    train_dl: torch.utils.data.DataLoader,
-    valid_dl: torch.utils.data.DataLoader,
-    tb_writer: Optional[SummaryWriter] = None,
-    world_size: int = 1,
+        params: AttributeDict,
+        model: nn.Module,
+        optimizer: torch.optim.Optimizer,
+        train_dl: torch.utils.data.DataLoader,
+        valid_dl: torch.utils.data.DataLoader,
+        tb_writer: Optional[SummaryWriter] = None,
+        world_size: int = 1,
 ) -> None:
     """Train the model for one epoch.
 
@@ -405,7 +416,7 @@ def train_one_epoch(
 
     tot_loss = MetricsTracker()
 
-    for batch_idx, batch in enumerate(train_dl):
+    for batch_idx, batch in enumerate(tqdm(train_dl, desc="Training")):
         params.batch_idx_train += 1
         x, y, sentence_lengths = batch
         batch_size = x.size(0)
@@ -450,6 +461,16 @@ def train_one_epoch(
 
                 tb_writer.add_scalar("train/tot_ppl", tot_ppl, params.batch_idx_train)
 
+        if batch_idx > 0 and batch_idx % params.save_checkpoint_interval == 0:
+            logging.info("saving checkpoint")
+            save_checkpoint(
+                params=params,
+                model=model,
+                optimizer=optimizer,
+                rank=0,
+                file_name=f"checkpoint-{params.batch_idx_train}.pt",
+            )
+
         if batch_idx > 0 and batch_idx % params.valid_interval == 0:
             logging.info("Computing validation loss")
 
@@ -481,6 +502,22 @@ def train_one_epoch(
     if params.train_loss < params.best_train_loss:
         params.best_train_epoch = params.cur_epoch
         params.best_train_loss = params.train_loss
+
+
+def find_latest_checkpoint(exp_dir: Path) -> Optional[str]:
+    """Find the latest checkpoint in `exp_dir` and return its filename.
+    If no checkpoint is found, return None.
+    """
+    checkpoint_files = list(exp_dir.glob("checkpoint-*.pt"))
+    if len(checkpoint_files) == 0:
+        return None
+
+    checkpoint_files = sorted(
+        checkpoint_files,
+        key=lambda x: int(x.stem.split("-")[1]),
+        reverse=True,
+    )
+    return str(checkpoint_files[0].name)
 
 
 def run(rank, world_size, args):
@@ -534,6 +571,17 @@ def run(rank, world_size, args):
     logging.info(f"Number of model parameters: {num_param}")
 
     checkpoints = load_checkpoint_if_available(params=params, model=model)
+    if checkpoints is not None and checkpoints.get("batch_idx_train", 0) >= 0:
+        logging.info(
+            f"Resuming training from epoch {checkpoints['best_train_epoch']} with "
+            f"train loss {checkpoints['best_train_loss']:.4f} and "
+            f"valid loss {checkpoints['best_valid_loss']:.4f}"
+        )
+    else:
+        logging.info("Try find latest checkpoint")
+        file_name = find_latest_checkpoint(params.exp_dir)
+        if file_name is not None:
+            checkpoints = load_checkpoint_if_available(params=params, model=model, file_name=file_name)
 
     model.to(device)
     if is_distributed:
