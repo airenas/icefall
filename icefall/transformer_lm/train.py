@@ -189,10 +189,11 @@ def get_params() -> AttributeDict:
             "best_train_epoch": -1,
             "best_valid_epoch": -1,
             "batch_idx_train": 0,
+            "batch_idx_train_current_epoch": 0,
             "log_interval": 200,
             "reset_interval": 2000,
             "valid_interval": 1000,
-            "save_checkpoint_interval": 30000,
+            "save_checkpoint_interval": 30,
             "nhead": 8,
             "embedding_dim": 768,
             "encoder_dim": 768,
@@ -232,12 +233,12 @@ def load_checkpoint_if_available(
     Returns:
       Return None.
     """
-    if params.start_epoch <= 0:
-        return None
 
     if file_name is not None:
         filename = params.exp_dir / file_name
     else:
+        if params.start_epoch <= 0:
+            return None
         filename = params.exp_dir / f"epoch-{params.start_epoch - 1}.pt"
     logging.info(f"Loading checkpoint: {filename}")
     saved_params = load_checkpoint(
@@ -251,6 +252,7 @@ def load_checkpoint_if_available(
         "best_train_epoch",
         "best_valid_epoch",
         "batch_idx_train",
+        "batch_idx_train_current_epoch",
         "best_train_loss",
         "best_valid_loss",
     ]
@@ -417,7 +419,11 @@ def train_one_epoch(
     tot_loss = MetricsTracker()
 
     for batch_idx, batch in enumerate(tqdm(train_dl, desc="Training")):
+        if batch_idx < params.batch_idx_train_current_epoch:
+            continue
         params.batch_idx_train += 1
+        params.batch_idx_train_current_epoch += 1
+
         x, y, sentence_lengths = batch
         batch_size = x.size(0)
         with torch_autocast(enabled=params.use_fp16):
@@ -468,7 +474,7 @@ def train_one_epoch(
                 model=model,
                 optimizer=optimizer,
                 rank=0,
-                file_name=f"checkpoint-{params.batch_idx_train}.pt",
+                file_name=f"checkpoint-{params.batch_idx_train - 1}.pt",
             )
 
         if batch_idx > 0 and batch_idx % params.valid_interval == 0:
@@ -508,9 +514,11 @@ def find_latest_checkpoint(exp_dir: Path) -> Optional[str]:
     """Find the latest checkpoint in `exp_dir` and return its filename.
     If no checkpoint is found, return None.
     """
+    logging.info(f"dir: {str(exp_dir)}")
     checkpoint_files = list(exp_dir.glob("checkpoint-*.pt"))
     if len(checkpoint_files) == 0:
         return None
+    logging.info(f"found: {len(checkpoint_files)} checkpoint files")
 
     checkpoint_files = sorted(
         checkpoint_files,
@@ -581,7 +589,11 @@ def run(rank, world_size, args):
         logging.info("Try find latest checkpoint")
         file_name = find_latest_checkpoint(params.exp_dir)
         if file_name is not None:
+            logging.info(f"Found checkpoint: {file_name}, loading it")
             checkpoints = load_checkpoint_if_available(params=params, model=model, file_name=file_name)
+            logging.info(
+                f"checkpoint, batch {checkpoints.get('batch_idx')}, current_idx: {checkpoints.get('batch_idx_train_current_epoch')}"
+            )
 
     model.to(device)
     if is_distributed:
@@ -628,6 +640,8 @@ def run(rank, world_size, args):
             tb_writer=tb_writer,
             world_size=world_size,
         )
+
+        params.batch_idx_train_current_epoch = 0
 
         save_checkpoint(
             params=params,
