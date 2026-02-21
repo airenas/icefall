@@ -193,7 +193,7 @@ def get_params() -> AttributeDict:
             "log_interval": 200,
             "reset_interval": 2000,
             "valid_interval": 1000,
-            "save_checkpoint_interval": 30,
+            "save_checkpoint_interval": 30000,
             "nhead": 8,
             "embedding_dim": 768,
             "encoder_dim": 768,
