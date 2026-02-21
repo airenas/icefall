@@ -9,6 +9,8 @@ data_dir?=data
 url?=https://data.statmt.org/cc-100/lt.txt.xz
 limit?=10000000000
 lex_port?=8080
+
+batch_size?=50
 ###################################################################
 $(data_dir):
 	mkdir -p $@
@@ -70,7 +72,7 @@ $(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | 
     --use-fp16 0 \
     --num-layers 12 \
     --tie-weights 1 \
-    --batch-size 300 \
+    --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.train.sorted.pt \
     --lm-data-valid $(data_dir)/lt.dev.sorted.pt
 	touch $@
@@ -85,7 +87,7 @@ calc/perplexity: $(exp_dir)/.done
 	--embedding-dim 2048 \
     --hidden-dim 2048 \
     --num-layers 3 \
-    --batch-size 300 \
+    --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.test.sorted.pt
 .PHONY: calc/perplexity
 ###################################################################
@@ -94,8 +96,5 @@ clean/cc-100:
 	rm -f $(data_dir)/lt.ready.txt
 .PHONY: clean/cc-100
 ###################################################################
-
 .EXPORT_ALL_VARIABLES:
-
-
 	
