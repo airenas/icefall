@@ -69,7 +69,7 @@ $(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | 
     --exp-dir $(exp_dir) \
     --start-epoch 0 \
     --num-epochs 10 \
-    --use-fp16 0 \
+    --use-fp16 1 \
     --num-layers 12 \
     --tie-weights 1 \
     --batch-size $(batch_size) \
