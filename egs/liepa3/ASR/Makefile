@@ -57,7 +57,7 @@ prepare/liepa3: $(data_dir)/fbank/.train.validated $(data_dir)/fbank/.dev.valida
 ##############################################################
 train: | $(exp_dir)
 	$(python_cmd) ./zipformer/train.py --world-size $(gpus) --num-epochs $(epoch) --start-epoch $(start_epoch) --use-fp16 1 \
-		--bpe-model $(lang_dir)/bpe.model \
+		--bpe-model $(lang_dir)/bpe.model --manifest-dir $(data_dir)/fbank \
 		--exp-dir $(exp_dir) \
 		$(train_params) 
 ##############################################################
