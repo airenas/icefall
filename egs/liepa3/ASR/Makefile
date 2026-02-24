@@ -11,6 +11,7 @@ limit_count?=100000000000000
 
 corpus_dir?=corpus
 start_epoch?=1
+gpus?=1
 
 epoch?=30
 avg?=15
@@ -55,7 +56,8 @@ prepare/liepa3: $(data_dir)/fbank/.train.validated $(data_dir)/fbank/.dev.valida
 # Train                                                      #
 ##############################################################
 train: | $(exp_dir)
-	$(python_cmd) ./zipformer/train.py --world-size 1 --num-epochs $(epoch) --start-epoch $(start_epoch) --use-fp16 1 \
+	$(python_cmd) ./zipformer/train.py --world-size $(gpus) --num-epochs $(epoch) --start-epoch $(start_epoch) --use-fp16 1 \
+		--bpe-model $(lang_dir)/bpe.model \
 		--exp-dir $(exp_dir) \
 		$(train_params) 
 ##############################################################
@@ -67,7 +69,7 @@ decode/test: .decode/cuts_test.jsonl.gz
 decode/common-voice: .decode/cuts_common-voice.jsonl.gz
 .PHONY: decode/common-voice		
 
-.decode/%: $(data_dir)/fbank/%
+.decode/%: $(data_dir)/%
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
