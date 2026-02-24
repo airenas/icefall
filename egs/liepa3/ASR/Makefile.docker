@@ -22,8 +22,7 @@ dbuild:
 run:
 	docker run --gpus all --rm ${docker_mode} \
 		--name liepa3-asr \
-	  	-v $(PWD):/workspace/icefall/egs/liepa3/ASR \
-		-v $(PWD)/../../cc-100:/workspace/icefall/egs/cc-100 \
+	  	-v $(PWD)/../../../egs:/workspace/icefall/egs \
 		-v $(PWD)/../../../icefall/transformer_lm:/workspace/icefall/egs/cc-100/TRANSFORMERLM/transformer_lm \
 		-v $(PWD)/../../../icefall/rnn_lm:/workspace/icefall/egs/cc-100/TRANSFORMERLM/rnn_lm \
 		-v $(docker_corpus_dir):/workspace/icefall/egs/liepa3/ASR/corpus \

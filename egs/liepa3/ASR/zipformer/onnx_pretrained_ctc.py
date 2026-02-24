@@ -193,6 +193,7 @@ def main():
 
     blank_id = 0
     s = "\n"
+    print(log_probs)
     for i in range(log_probs.size(0)):
         # greedy search
         indexes = log_probs[i, : log_probs_len[i]].argmax(dim=-1)

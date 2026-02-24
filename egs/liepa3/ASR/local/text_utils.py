@@ -38,3 +38,30 @@ def clean_text(param: str) -> Tuple[str, bool]:
         return "", False
     return res, True
 
+
+def clean_tags(param: str) -> str:
+    """Clean tags from the input text.
+
+    - replace <xxx> with spaces
+
+    Returns cleaned text.
+    """
+    res = ""
+    in_tag = False
+    for c in param:
+        if c == "<":
+            in_tag = True
+            res += " "
+        elif c == ">":
+            in_tag = False
+        elif not in_tag:
+            res += c
+    return res
+
+
+def drop_sil(param: str, sil: str = "sil") -> str:
+    """Drops sil.
+    """
+    res = param.split()
+    res = [w for w in res if w != sil]
+    return " ".join(res)
