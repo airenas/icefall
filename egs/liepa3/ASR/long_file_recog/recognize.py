@@ -357,7 +357,7 @@ def run(rank, world_size, args, in_cuts):
     else:
         out_cuts_filename = params.manifest_out
 
-    dl = asr_data_module.test_dataloaders(in_cuts, dynamic=False)
+    dl = asr_data_module.test_dataloaders(in_cuts)
 
     cuts_writer = CutSet.open_writer(out_cuts_filename, overwrite=True)
     decode_dataset(

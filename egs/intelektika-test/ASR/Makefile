@@ -35,10 +35,13 @@ $(data_dir)/manifests/cuts_priv.jsonl.gz: | $(data_dir)/manifests
           --output-file $@ --audio-pattern "{0}.wav"	
 $(data_dir)/manifests/cuts_tel.jsonl.gz: | $(data_dir)/manifests
 	$(python_cmd) local/prepare_test_cut.py --corpus-dir $(corpus_dir)/TEL --transcript-file $(corpus_dir)/kaldi-data/16-TELs/textw \
-          --output-file $@ --audio-pattern "{1}/{2}.wav"			  
+          --output-file $@ --audio-pattern "{1}/{2}.wav"	
+$(data_dir)/manifests/cuts_lrv.jsonl.gz: | $(data_dir)/manifests
+	$(python_cmd) local/prepare_test_cut.py --corpus-dir $(corpus_dir)/LRVR --transcript-file $(corpus_dir)/kaldi-data/16-LRV1/textw \
+          --output-file $@ --audio-pattern "{0}_{1}_{2}_{3}_{4}.wav"		  		  
 ##############################################################
 $(data_dir)/fbank/cuts_%.jsonl.gz: $(data_dir)/manifests/cuts_%.jsonl.gz  | $(data_dir)/fbank
-	$(python_cmd) ./local/compute_fbank.py --cuts $< --output-dir $(data_dir)/fbank \
+	$(python_cmd) ./../../liepa3/ASR/local/compute_fbank.py --cuts $< --output-dir $(data_dir)/fbank \
 		--partition $* --perturb-speed False
 $(data_dir)/fbank-chunks/cuts_%.jsonl.gz: $(data_dir)/fbank/cuts_%.jsonl.gz  | $(data_dir)/fbank-chunks
 	$(python_cmd) ./long_file_recog/split_into_chunks.py --manifest-in $< --manifest-out $(data_dir)/fbank-chunks/cuts_$*.jsonl.gz \
@@ -78,7 +81,11 @@ wer/arm: $(data_dir)/results/.arm.done
 .PHONY: wer/arm
 wer/priv: $(data_dir)/results/.priv.done
 .PHONY: wer/priv
-wer: wer/priv wer/adam wer/arm
+wer/tel: $(data_dir)/results/.tel.done
+.PHONY: wer/tel
+wer/lrv: $(data_dir)/results/.lrv.done
+.PHONY: wer/lrv
+wer: wer/priv wer/adam wer/arm wer/tel wer/lrv
 .PHONY: wer
 ##############################################################
 .EXPORT_ALL_VARIABLES:

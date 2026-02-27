@@ -18,7 +18,7 @@ import sentencepiece as spm
 import torch
 from lhotse import CutSet, Fbank, FbankConfig, LilcomChunkyWriter
 
-from filter_cuts import filter_cuts
+from egs.liepa3.ASR.local.filter_cuts import filter_cuts
 from icefall.utils import get_executor, str2bool
 
 # Torch's multithreaded behavior needs to be disabled or
