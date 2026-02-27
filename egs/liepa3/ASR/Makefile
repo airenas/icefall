@@ -63,10 +63,10 @@ train: | $(exp_dir)
 ##############################################################
 # Decode                     	                             #
 ##############################################################
-decode/test: .decode/cuts_test.jsonl.gz
+decode/test: .decode/fbank/cuts_test.jsonl.gz
 .PHONY: decode/test
 
-decode/common-voice: .decode/cuts_common-voice.jsonl.gz
+decode/common-voice: .decode/fbank/cuts_common-voice.jsonl.gz
 .PHONY: decode/common-voice		
 
 .decode/%: $(data_dir)/%
@@ -78,12 +78,26 @@ decode/common-voice: .decode/cuts_common-voice.jsonl.gz
 		$(lm_params) \
 		--test-cut $<
 ##############################################################
+# Export                     	                             #
+##############################################################
+export:
+	$(python_cmd) ./zipformer/export.py \
+	    --tokens $(lang_dir)/tokens.txt \
+		--exp-dir $(exp_dir) \
+		--use-averaged-model 1 \
+		--epoch $(epoch) \
+		--avg $(avg) \
+		$(export_params) \
+		--left-context-frames 128\
+		--jit 1
+##############################################################
 # ONNX                     	                             #
 ##############################################################
 onnx/export:
 	$(python_cmd) ./zipformer/export-onnx-ctc.py \
 		--tokens $(lang_dir)/tokens.txt \
 		--exp-dir $(exp_dir) \
+		--bpe-model $(lang_dir)/bpe.model \
 		--use-averaged-model 1 \
 		--epoch $(epoch) \
 		--avg $(avg) \
@@ -95,7 +109,6 @@ onnx/export:
 		--chunk-size 16 \
 		$(export_params) \
 		--left-context-frames 128
-
 onnx/decode-wav:
 	$(python_cmd) ./zipformer/onnx_pretrained_ctc.py \
 		--nn-model $(exp_dir)/model.onnx \

@@ -108,8 +108,7 @@ import torch.nn as nn
 from lhotse import CutSet, set_caching_enabled
 from tqdm import tqdm
 
-from asr_datamodule import Liepa3AsrDataModule
-from beam_search import (
+from egs.liepa3.ASR.zipformer.beam_search import (
     beam_search,
     fast_beam_search_nbest,
     fast_beam_search_nbest_LG,
@@ -123,6 +122,7 @@ from beam_search import (
     modified_beam_search_lm_shallow_fusion,
     modified_beam_search_LODR,
 )
+from egs.liepa3.ASR.zipformer.asr_datamodule import Liepa3AsrDataModule
 from icefall import ContextGraph, LmScorer, NgramLm
 from icefall.checkpoint import (
     average_checkpoints,
@@ -138,7 +138,7 @@ from icefall.utils import (
     str2bool,
     write_error_stats,
 )
-from train import add_model_arguments, get_model, get_params
+from egs.liepa3.ASR.zipformer.train import add_model_arguments, get_model, get_params
 
 LOG_EPS = math.log(1e-10)
 

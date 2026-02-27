@@ -16,7 +16,7 @@
 
 import torch
 import torch.nn as nn
-from scaling import ScaledLinear
+from egs.liepa3.ASR.zipformer.scaling import ScaledLinear
 
 
 class Joiner(nn.Module):

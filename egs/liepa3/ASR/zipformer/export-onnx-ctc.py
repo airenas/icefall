@@ -73,9 +73,9 @@ import onnx
 import torch
 import torch.nn as nn
 from onnxruntime.quantization import QuantType, quantize_dynamic
-from scaling_converter import convert_scaled_to_non_scaled
-from train import add_model_arguments, get_model, get_params
-from zipformer import Zipformer2
+from egs.liepa3.ASR.zipformer.scaling_converter import convert_scaled_to_non_scaled
+from egs.liepa3.ASR.zipformer.train import add_model_arguments, get_model, get_params
+from egs.liepa3.ASR.zipformer.zipformer import Zipformer2
 
 from icefall.checkpoint import (
     average_checkpoints,

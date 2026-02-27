@@ -60,27 +60,27 @@ from shutil import copyfile
 from typing import Any, Dict, Optional, Tuple, Union
 
 import k2
-import optim
+import egs.liepa3.ASR.zipformer.optim
 import sentencepiece as spm
 import torch
 import torch.multiprocessing as mp
 import torch.nn as nn
-from asr_datamodule import Liepa3AsrDataModule
-from attention_decoder import AttentionDecoderModel
-from decoder import Decoder
-from joiner import Joiner
+from egs.liepa3.ASR.zipformer.asr_datamodule import Liepa3AsrDataModule
+from egs.liepa3.ASR.zipformer.attention_decoder import AttentionDecoderModel
+from egs.liepa3.ASR.zipformer.decoder import Decoder
+from egs.liepa3.ASR.zipformer.joiner import Joiner
 from lhotse.cut import Cut
 from lhotse.dataset import SpecAugment
 from lhotse.dataset.sampling.base import CutSampler
 from lhotse.utils import fix_random_seed
-from model import AsrModel
-from optim import Eden, ScaledAdam
-from scaling import ScheduledFloat
-from subsampling import Conv2dSubsampling
+from egs.liepa3.ASR.zipformer.model import AsrModel
+from egs.liepa3.ASR.zipformer.optim import Eden, ScaledAdam
+from egs.liepa3.ASR.zipformer.scaling import ScheduledFloat
+from egs.liepa3.ASR.zipformer.subsampling import Conv2dSubsampling
 from torch import Tensor
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
-from zipformer import Zipformer2
+from egs.liepa3.ASR.zipformer.zipformer import Zipformer2
 
 from icefall import diagnostics
 from icefall.checkpoint import load_checkpoint, remove_checkpoints
@@ -103,7 +103,7 @@ from icefall.utils import (
     torch_autocast,
 )
 
-LRSchedulerType = Union[torch.optim.lr_scheduler._LRScheduler, optim.LRScheduler]
+LRSchedulerType = Union[torch.optim.lr_scheduler._LRScheduler, egs.liepa3.ASR.zipformer.optim.LRScheduler]
 
 
 def get_adjusted_batch_count(params: AttributeDict) -> float:
