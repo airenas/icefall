@@ -13,6 +13,7 @@ from pathlib import Path
 
 import torch
 from lhotse import load_manifest_lazy
+from tqdm import tqdm
 
 
 def get_args():
@@ -25,13 +26,17 @@ def get_args():
     )
     return parser.parse_args()
 
+
 def test_for_bad_cuts(cuts):
     bad = []
-    for c in cuts:
+    pbar = tqdm(cuts, desc="Checking cuts for bad features")
+    for c in pbar:
         feats = c.load_features()
         feats_tensor = torch.tensor(feats)
         if torch.isnan(feats_tensor).any() or torch.isinf(feats_tensor).any():
             bad.append(c.id)
+        pbar.set_postfix({"bad cuts": len(bad)})
+           
 
     logging.info(f"Number of bad cuts: {len(bad)}")
     logging.info(f"Example bad cut IDs: {bad[:10]}")
