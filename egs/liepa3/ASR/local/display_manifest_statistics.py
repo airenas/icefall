@@ -29,7 +29,8 @@ def test_for_bad_cuts(cuts):
     bad = []
     for c in cuts:
         feats = c.load_features()
-        if torch.isnan(feats).any() or torch.isinf(feats).any():
+        feats_tensor = torch.tensor(feats)
+        if torch.isnan(feats_tensor).any() or torch.isinf(feats_tensor).any():
             bad.append(c.id)
 
     logging.info(f"Number of bad cuts: {len(bad)}")
