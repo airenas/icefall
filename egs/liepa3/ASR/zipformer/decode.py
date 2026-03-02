@@ -105,7 +105,7 @@ import k2
 import sentencepiece as spm
 import torch
 import torch.nn as nn
-from lhotse import CutSet, set_caching_enabled
+from lhotse import set_caching_enabled
 from tqdm import tqdm
 
 from egs.liepa3.ASR.zipformer.beam_search import (
