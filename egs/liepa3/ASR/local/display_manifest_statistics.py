@@ -11,6 +11,7 @@ import logging
 import os
 from pathlib import Path
 
+import torch
 from lhotse import load_manifest_lazy
 
 
@@ -22,8 +23,18 @@ def get_args():
         help="""Transcript file.
         """,
     )
-
     return parser.parse_args()
+
+def test_for_bad_cuts(cuts):
+    bad = []
+    for c in cuts:
+        feats = c.load_features()
+        if torch.isnan(feats).any() or torch.isinf(feats).any():
+            bad.append(c.id)
+
+    logging.info(f"Number of bad cuts: {len(bad)}")
+    logging.info(f"Example bad cut IDs: {bad[:10]}")
+    return len(bad) == 0
 
 
 def main():
@@ -33,6 +44,8 @@ def main():
 
     cuts = load_manifest_lazy(path)
     cuts.describe()
+    if test_for_bad_cuts(cuts):
+        logging.info("Cuts OK")
 
 
 if __name__ == "__main__":
