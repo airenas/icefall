@@ -613,6 +613,7 @@ def get_params() -> AttributeDict:
             "label_smoothing": 0.1,
             "warm_step": 2000,
             "env_info": get_env_info(),
+            "warmup_batches": 4000.0,
         }
     )
 
@@ -1344,7 +1345,7 @@ def run(rank, world_size, args):
         clipping_scale=2.0,
     )
 
-    scheduler = Eden(optimizer, params.lr_batches, params.lr_epochs, warmup_start=0.1)
+    scheduler = Eden(optimizer, params.lr_batches, params.lr_epochs, warmup_batches=params.warmup_batches,  warmup_start=0.1)
 
     if checkpoints and "optimizer" in checkpoints:
         logging.info("Loading optimizer state dict")
