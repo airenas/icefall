@@ -62,8 +62,8 @@ prepare/adam: $(data_dir)/fbank/cuts_adam.jsonl.gz
 .PHONY: prepare/adam
 prepare/arm: $(data_dir)/fbank/cuts_arm.jsonl.gz
 .PHONY: prepare/arm
-prepare/lvr: $(data_dir)/fbank/cuts_lvr.jsonl.gz
-.PHONY: prepare/lvr
+prepare/lrv: $(data_dir)/fbank/cuts_lrv.jsonl.gz
+.PHONY: prepare/lrv
 prepare/priv: $(data_dir)/fbank-chunks/cuts_priv.jsonl.gz
 .PHONY: prepare/priv
 prepare/tel: $(data_dir)/fbank/cuts_tel.jsonl.gz
@@ -101,21 +101,21 @@ $(data_dir)/results/.%.done: $(data_dir)/merged/cuts_%.jsonl.gz  | $(data_dir)/r
 	touch $@
 wer/adam: $(data_dir)/results/.adam.done.rec
 .PHONY: wer/adam	
-wer/arm: $(data_dir)/results/.arm.done
+wer/arm: $(data_dir)/results/.arm.done.rec
 .PHONY: wer/arm
-wer/priv: $(data_dir)/results/.priv.done
+wer/priv: $(data_dir)/results/.priv.done.rec
 .PHONY: wer/priv
 wer/tel1: $(data_dir)/results/.tel1.done
 .PHONY: wer/tel1
-wer/tels: $(data_dir)/results/.tels.done
+wer/tels: $(data_dir)/results/.tels.done.rec
 .PHONY: wer/tels
 wer/lrv: $(data_dir)/results/.lrv.done.rec
 .PHONY: wer/lrv
 wer/spek: $(data_dir)/results/.spek.done
 .PHONY: wer/spek
-wer/tvr: $(data_dir)/results/.tvr.done
+wer/tvr: $(data_dir)/results/.tvr.done.rec
 .PHONY: wer/tvr
-wer/babl: $(data_dir)/results/.babl.done
+wer/babl: $(data_dir)/results/.babl.done.rec
 .PHONY: wer/babl
 wer: wer/priv wer/adam wer/arm wer/tel1 wer/tels wer/lrv wer/spek wer/tvr wer/babl
 .PHONY: wer
