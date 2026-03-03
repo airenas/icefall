@@ -56,7 +56,7 @@ def main():
 
     logging.info(f"collecting files from {args.corpus_dir} and transcripts from {args.transcript_dir}")
 
-    recordings = []
+    recordings = {}
     supervisions = []
 
     transcript_file = args.transcript_dir / "textw"
@@ -122,7 +122,7 @@ def main():
 
     logging.info(f"Found {len(files)} files")
 
-    for line_id, (segment, fn, utt_text) in enumerate(tqdm(files, desc="Processing files")):
+    for _, (segment, fn, utt_text) in enumerate(tqdm(files, desc="Processing files")):
         audio_path = fn
         # logging.info(f"audio: {str(audio_path)}")
 
@@ -133,7 +133,12 @@ def main():
                 audio_path,
             )
             continue
-        recording = Recording.from_file(audio_path, recording_id=str(line_id))
+        rec_id = audio_path.stem
+        if rec_id not in recordings:
+            recordings[rec_id] = Recording.from_file(
+                audio_path,
+                recording_id=rec_id
+            )
 
         text = clean_tags(utt_text)
         text, ok = clean_text(text)
@@ -146,12 +151,10 @@ def main():
         text = drop_sil(text, "sil")
         text = drop_sil(text, "noise")
 
-        recordings.append(recording)
-
         # Supervision object
         supervision = SupervisionSegment(
             id=segment.name,
-            recording_id=str(line_id),
+            recording_id=rec_id,
             start=segment.start,
             duration=segment.end - segment.start,
             channel=0,
@@ -162,7 +165,7 @@ def main():
         supervisions.append(supervision)
         count += 1
 
-    recording_set = RecordingSet.from_recordings(recordings)
+    recording_set = RecordingSet.from_recordings(recordings.values())
     supervision_set = SupervisionSet.from_segments(supervisions)
 
     cuts = CutSet.from_manifests(
