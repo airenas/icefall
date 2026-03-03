@@ -52,34 +52,27 @@
 
 
 
-### zipformer 
+### streaming models
 
-#### streaming
+#### results 
 
-##### 
-
-| decoding method                      | test       | test-cv | comment             |
+| model/decoding method                      | test       | test-cv | comment    |
 |--------------------------------------|------------|---------|---------------------|
-| greedy_search                        | 6.39       | 15.46   | --epoch 30 --avg 10 |
+| ms2: zipformer + training with noise/greedy_search  | 3.98       | 10.98   |  |
+| ms1: zipformer/greedy_search                        | 6.39       | 15.46   |  |
 
-###### Train params
+#### ms1: zipformer streaming
+##### Train params
 
 `./zipformer/train.py --world-size 2 --num-epochs 30 --start-epoch 1 --causal 1 --use-cr-ctc 0 --use-ctc 0 --use-transducer 1 --use-attention-decoder 0  --enable-spec-aug 0 --max-duration 700 --base-lr 0.02`
 
-###### Decode params
+##### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10 --beam-size 4 --decode-limit 0 --causal 1 --use-cr-ctc 0 --use-ctc 0 --use-transducer 1 --use-attention-decoder 0  --max-duration 700 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128`
 
-#### streaming + training with noise (MUSAN)
-
-##### 
-
-| decoding method                      | test       | test-cv | comment             |
-|--------------------------------------|------------|---------|---------------------|
-| greedy_search                        | 3.98       | 10.98   | --epoch 30 --avg 10 |
-
-###### Train params
+#### ms2: zipformer streaming + training with noise (MUSAN)
+##### Train params
 
 `./zipformer/train.py --world-size 2 --num-epochs 30 --start-epoch 1 --causal 1 --use-cr-ctc 0 --use-ctc 0 --use-transducer 1 --use-attention-decoder 0  --ctc-loss-scale 0.1 --enable-spec-aug 1 --enable-musan 1  --cr-loss-scale 0.02 --max-duration 700 --base-lr 0.02`
 
-###### Decode params
+##### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --beam-size 4 --decode-limit 0 --causal 1 --use-cr-ctc 0 --use-ctc 0 --use-transducer 1 --use-attention-decoder 0  --max-duration 700 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128`
