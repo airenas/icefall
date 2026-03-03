@@ -11,9 +11,7 @@ import logging
 import os
 from pathlib import Path
 
-import torch
 from lhotse import load_manifest_lazy
-from tqdm import tqdm
 
 
 def get_args():
@@ -27,20 +25,20 @@ def get_args():
     return parser.parse_args()
 
 
-def test_for_bad_cuts(cuts):
-    bad = []
-    pbar = tqdm(cuts, desc="Checking cuts for bad features")
-    for c in pbar:
-        feats = c.load_features()
-        feats_tensor = torch.tensor(feats)
-        if torch.isnan(feats_tensor).any() or torch.isinf(feats_tensor).any():
-            bad.append(c.id)
-        pbar.set_postfix({"bad cuts": len(bad)})
-           
+# def test_for_bad_cuts(cuts):
+#     bad = []
+#     pbar = tqdm(cuts, desc="Checking cuts for bad features")
+#     for c in pbar:
+#         feats = c.load_features()
+#         feats_tensor = torch.tensor(feats)
+#         if torch.isnan(feats_tensor).any() or torch.isinf(feats_tensor).any():
+#             bad.append(c.id)
+#         pbar.set_postfix({"bad cuts": len(bad)})
 
-    logging.info(f"Number of bad cuts: {len(bad)}")
-    logging.info(f"Example bad cut IDs: {bad[:10]}")
-    return len(bad) == 0
+
+#     logging.info(f"Number of bad cuts: {len(bad)}")
+#     logging.info(f"Example bad cut IDs: {bad[:10]}")
+#     return len(bad) == 0
 
 
 def main():
@@ -50,8 +48,8 @@ def main():
 
     cuts = load_manifest_lazy(path)
     cuts.describe()
-    if test_for_bad_cuts(cuts):
-        logging.info("Cuts OK")
+    # if test_for_bad_cuts(cuts):
+    #     logging.info("Cuts OK")
 
 
 if __name__ == "__main__":

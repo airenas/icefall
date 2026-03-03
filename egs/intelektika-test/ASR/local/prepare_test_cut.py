@@ -151,6 +151,15 @@ def main():
         text = drop_sil(text, "sil")
         text = drop_sil(text, "noise")
 
+        # if not text:
+        #     logging.warning(
+        #         "Text is empty after cleaning for segment '%s', skipping",
+        #         segment.name,
+        #     )
+        #     continue
+        if segment.end - segment.start <= 0:
+            raise RuntimeError(f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")  
+
         # Supervision object
         supervision = SupervisionSegment(
             id=segment.name,

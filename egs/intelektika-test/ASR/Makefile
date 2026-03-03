@@ -64,12 +64,19 @@ prepare/arm: $(data_dir)/fbank/cuts_arm.jsonl.gz
 .PHONY: prepare/arm
 prepare/lrv: $(data_dir)/fbank/cuts_lrv.jsonl.gz
 .PHONY: prepare/lrv
-prepare/priv: $(data_dir)/fbank-chunks/cuts_priv.jsonl.gz
+prepare/priv: $(data_dir)/fbank/cuts_priv.jsonl.gz
 .PHONY: prepare/priv
-prepare/tel: $(data_dir)/fbank/cuts_tel.jsonl.gz
-.PHONY: prepare/tel
-prepare: prepare/adam prepare/arm prepare/priv prepare/tel
+prepare/tels: $(data_dir)/fbank/cuts_tels.jsonl.gz
+.PHONY: prepare/tels
+prepare/babl: $(data_dir)/fbank/cuts_babl.jsonl.gz
+.PHONY: prepare/babl
+prepare: prepare/adam prepare/arm prepare/priv prepare/tels prepare/babl prepare/lrv
 .PHONY: prepare
+##############################################################
+validate/%: $(data_dir)/fbank/cuts_%.jsonl.gz
+	$(python_cmd) ./../../liepa3/ASR/local/validate_manifest.py $^
+	$(python_cmd) ./../../liepa3/ASR/local/display_manifest_statistics.py --cuts-file $^
+.PHONY: validate/%
 ##############################################################
 $(data_dir)/recognized/cuts_%.jsonl.gz: $(data_dir)/fbank-chunks/cuts_%.jsonl.gz  | $(data_dir)/recognized
 	$(python_cmd) ./long_file_recog/recognize.py --manifest-in $< --manifest-out $(data_dir)/recognized/cuts_$*_.jsonl.gz \
