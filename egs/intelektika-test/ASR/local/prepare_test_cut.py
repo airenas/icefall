@@ -187,7 +187,12 @@ def main():
     )
     cuts = cuts.trim_to_supervisions(keep_all_channels=True)
 
-    if count == 0:
+    cb = sum(1 for _ in cuts)
+    cuts = cuts.filter(lambda c: c.duration >= 0.03)
+    ca = sum(1 for _ in cuts)
+    if cb != ca:
+        logging.warning(f"Removed {cb - ca} cuts shorter than 30ms")
+    if ca == 0:
         raise RuntimeError("No valid files found, cannot create cuts")
 
     cuts_path = Path(args.output_file)
