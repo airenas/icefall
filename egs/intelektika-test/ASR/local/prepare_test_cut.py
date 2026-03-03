@@ -133,12 +133,13 @@ def main():
                 audio_path,
             )
             continue
-        rec_id = audio_path.stem
+        rec_id = segment.file
         if rec_id not in recordings:
             recordings[rec_id] = Recording.from_file(
                 audio_path,
                 recording_id=rec_id
             )
+        duration = recordings[rec_id].duration
 
         text = clean_tags(utt_text)
         text, ok = clean_text(text)
@@ -158,7 +159,10 @@ def main():
         #     )
         #     continue
         if segment.end - segment.start <= 0:
-            raise RuntimeError(f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")  
+            raise RuntimeError(f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")
+        if segment.end > duration:
+            raise RuntimeError(
+               f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}, recording duration={duration}")
 
         # Supervision object
         supervision = SupervisionSegment(
