@@ -160,7 +160,7 @@ def main():
         #     continue
         if segment.end - segment.start <= 0:
             raise RuntimeError(f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")
-        if segment.end > duration:
+        if segment.end > duration + 0.1:  # allow 100ms tolerance
             raise RuntimeError(
                f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}, recording duration={duration}")
 
