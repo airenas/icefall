@@ -58,10 +58,12 @@ $(data_dir)/fbank/cuts_%.jsonl.gz: $(data_dir)/manifests/cuts_%.jsonl.gz  | $(da
 $(data_dir)/fbank-chunks/cuts_%.jsonl.gz: $(data_dir)/fbank/cuts_%.jsonl.gz  | $(data_dir)/fbank-chunks
 	$(python_cmd) ./long_file_recog/split_into_chunks.py --manifest-in $< --manifest-out $(data_dir)/fbank-chunks/cuts_$*.jsonl.gz \
 		--chunk 30 --extra 2
-prepare/adam: $(data_dir)/fbank-chunks/cuts_adam.jsonl.gz
+prepare/adam: $(data_dir)/fbank/cuts_adam.jsonl.gz
 .PHONY: prepare/adam
 prepare/arm: $(data_dir)/fbank/cuts_arm.jsonl.gz
 .PHONY: prepare/arm
+prepare/lvr: $(data_dir)/fbank/cuts_lvr.jsonl.gz
+.PHONY: prepare/lvr
 prepare/priv: $(data_dir)/fbank-chunks/cuts_priv.jsonl.gz
 .PHONY: prepare/priv
 prepare/tel: $(data_dir)/fbank/cuts_tel.jsonl.gz
