@@ -78,7 +78,7 @@ $(data_dir)/recognized/cuts_%.jsonl.gz: $(data_dir)/fbank-chunks/cuts_%.jsonl.gz
 rec/adam: $(data_dir)/recognized/cuts_adam.jsonl.gz
 .PHONY: rec/adam
 ##############################################################
-$(data_dir)/results/.%.done.rec: $(data_dir)/fbank/cuts_%.jsonl.gz
+$(data_dir)/results/.%.done.rec: $(data_dir)/fbank/cuts_%.jsonl.gz | $(data_dir)/results
 	$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
