@@ -111,7 +111,7 @@ wer/tels: $(data_dir)/results/.tels.done.rec
 .PHONY: wer/tels
 wer/lrv: $(data_dir)/results/.lrv.done.rec
 .PHONY: wer/lrv
-wer/spek: $(data_dir)/results/.spek.done
+wer/spek: $(data_dir)/results/.spek.done.rec
 .PHONY: wer/spek
 wer/tvr: $(data_dir)/results/.tvr.done.rec
 .PHONY: wer/tvr
