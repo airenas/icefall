@@ -172,6 +172,7 @@ def main():
         recordings=recording_set,
         supervisions=supervision_set,
     )
+    cuts = cuts.trim_to_supervisions()
 
     if count == 0:
         raise RuntimeError("No valid files found, cannot create cuts")
