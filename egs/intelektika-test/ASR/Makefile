@@ -1,14 +1,14 @@
 cfg?=Makefile.options
 -include $(cfg)
 
-LOGLEVEL?=INFO
+log?=INFO
 
 exp_dir?=data/exp/v01
 vocab_size?=500
 lang_dir=$(data_dir)/lang_bpe_${vocab_size}
 
 log?=INFO
-python_cmd=PYTHONPATH=./../../../ LOG_LEVEL=$(log) python3
+python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 decode_limit?=0
 
 epoch?=30
@@ -78,6 +78,16 @@ $(data_dir)/recognized/cuts_%.jsonl.gz: $(data_dir)/fbank-chunks/cuts_%.jsonl.gz
 rec/adam: $(data_dir)/recognized/cuts_adam.jsonl.gz
 .PHONY: rec/adam
 ##############################################################
+$(data_dir)/results/.%.done.rec: $(data_dir)/fbank/cuts_%.jsonl.gz
+	$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
+		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
+		--decoding-method $(decoding_method) \
+		--beam-size 4 --decode-limit $(decode_limit) --num-buckets=2 \
+		$(decode_params) \
+		$(lm_params) \
+		--test-cut $<
+	touch $@	
+##############################################################
 $(data_dir)/merged/cuts_%.jsonl.gz: $(data_dir)/recognized/cuts_%.jsonl.gz  | $(data_dir)/merged
 	$(python_cmd) ./long_file_recog/merge_chunks.py --manifest-in $< --manifest-out $(data_dir)/merged/cuts_$*_.jsonl.gz \
 		--bpe-model $(lang_dir)/bpe.model --extra 2
@@ -87,7 +97,7 @@ $(data_dir)/results/.%.done: $(data_dir)/merged/cuts_%.jsonl.gz  | $(data_dir)/r
 	$(python_cmd) ./long_file_recog/compute_wer.py --manifest-in $< --out-dir $(data_dir)/results \
 	--name $*
 	touch $@
-wer/adam: $(data_dir)/results/.adam.done
+wer/adam: $(data_dir)/results/.adam.done.rec
 .PHONY: wer/adam	
 wer/arm: $(data_dir)/results/.arm.done
 .PHONY: wer/arm
@@ -97,7 +107,7 @@ wer/tel1: $(data_dir)/results/.tel1.done
 .PHONY: wer/tel1
 wer/tels: $(data_dir)/results/.tels.done
 .PHONY: wer/tels
-wer/lrv: $(data_dir)/results/.lrv.done
+wer/lrv: $(data_dir)/results/.lrv.done.rec
 .PHONY: wer/lrv
 wer/spek: $(data_dir)/results/.spek.done
 .PHONY: wer/spek

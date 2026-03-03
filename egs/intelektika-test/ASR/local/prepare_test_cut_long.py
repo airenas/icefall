@@ -42,14 +42,12 @@ def get_args():
 
     return parser.parse_args()
 
-
 class Segment():
     def __init__(self, name: str, file: str, start: float, end: float):
         self.name = name
         self.file = file
         self.start = start
         self.end = end
-
 
 def main():
     args = get_args()
@@ -78,22 +76,28 @@ def main():
             file_map[f] = audio_path
     segments_map = {}
 
-    with open(segments_file, newline="", encoding="utf-8-sig") as file:
-        for line in tqdm(file, desc="Processing segments_file file"):
-            line = line.strip()
-            if not line:
-                continue
-            row = line.split(" ")
-            if len(row) < 4:
-                raise RuntimeError(f"Invalid line in segments file: {line}")
-            seg, str_path, start, end = row[0], row[1], row[2], row[3]
-            segments_map[seg] = Segment(name=seg, file=str_path, start=float(start), end=float(end))
+    no_segmens = True
+    if segments_file.is_file():
+        no_segmens = False
+        with open(segments_file, newline="", encoding="utf-8-sig") as file:
+            for line in tqdm(file, desc="Processing segments_file file"):
+                line = line.strip()
+                if not line:
+                    continue
+                row = line.split(" ")
+                if len(row) < 4:
+                    raise RuntimeError(f"Invalid line in segments file: {line}")
+                seg, str_path, start, end = row[0], row[1], row[2], row[3]
+                segments_map[seg] = Segment(name=seg, file=str_path, start=float(start), end=float(end))
 
     count = 0
 
     files = []
+    previous_f: Optional[Path] = None
+    previous_t = ""
+
     with open(transcript_file, newline="", encoding="utf-8-sig") as file:
-        for line_id, line in enumerate(tqdm(file, desc="Processing textw file")):
+        for line_id, line in enumerate(tqdm(file, desc="Processing cv file")):
             line = line.strip()
             if not line:
                 continue
@@ -103,26 +107,37 @@ def main():
             else:
                 seg, utt_text = row[0], row[1]
             logging.info(f"segment: {seg}")
-            segment = segments_map.get(seg)
-            if not segment:
-                logging.warning(
-                    "Audio segment for '%s' not found in segments, skipping",
-                    seg,
-                )
-                continue
-            fn = file_map.get(segment.file)
+            if no_segmens:
+                f = seg
+            else:
+                f = segments_map.get(seg)
+                if not f:
+                    logging.warning(
+                        "Audio segment for '%s' not found in segments, skipping",
+                        seg,
+                    )
+                    continue
+            fn = file_map.get(f)
             if not fn:
                 logging.warning(
                     "Audio file for '%s' not found in wav.scp, skipping",
-                    segment.file,
+                    f,
                 )
                 continue
-            files.append((segment, fn, utt_text))
+            if previous_f == fn:
+                previous_t += " " + utt_text
+                continue
+            if previous_f:
+                files.append((previous_f, previous_t))
+            previous_f = fn
+            previous_t = utt_text
             logging.info(f"audio: {str(fn)}")
+    if previous_f:
+        files.append((previous_f, previous_t))
 
     logging.info(f"Found {len(files)} files")
 
-    for line_id, (segment, fn, utt_text) in enumerate(tqdm(files, desc="Processing files")):
+    for line_id, (fn, utt_text) in enumerate(tqdm(files, desc="Processing files")):
         audio_path = fn
         # logging.info(f"audio: {str(audio_path)}")
 
@@ -134,6 +149,7 @@ def main():
             )
             continue
         recording = Recording.from_file(audio_path, recording_id=str(line_id))
+        duration = recording.duration
 
         text = clean_tags(utt_text)
         text, ok = clean_text(text)
@@ -150,10 +166,10 @@ def main():
 
         # Supervision object
         supervision = SupervisionSegment(
-            id=segment.name,
+            id=str(line_id),
             recording_id=str(line_id),
-            start=segment.start,
-            duration=segment.end - segment.start,
+            start=0,
+            duration=duration,
             channel=0,
             speaker="unknown",
             # channel_ids = [0],
