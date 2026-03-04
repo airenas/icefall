@@ -613,7 +613,7 @@ def get_params() -> AttributeDict:
             "label_smoothing": 0.1,
             "warm_step": 2000,
             "env_info": get_env_info(),
-            "warmup_batches": 4000.0,
+            "warmup_batches": 500.0,
         }
     )
 
