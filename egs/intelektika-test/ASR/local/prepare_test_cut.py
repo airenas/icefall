@@ -3,7 +3,6 @@ import argparse
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 from lhotse import RecordingSet, SupervisionSet, CutSet, Recording, SupervisionSegment
 from tqdm import tqdm
@@ -40,6 +39,13 @@ def get_args():
             """,
     )
 
+    parser.add_argument(
+        "--skip-empty-text",
+        type=bool,
+        default=False,
+        help="""Whether to skip segments with empty text after cleaning.
+                """,
+    )
     return parser.parse_args()
 
 
@@ -152,17 +158,18 @@ def main():
         text = drop_sil(text, "sil")
         text = drop_sil(text, "noise")
 
-        # if not text:
-        #     logging.warning(
-        #         "Text is empty after cleaning for segment '%s', skipping",
-        #         segment.name,
-        #     )
-        #     continue
+        if not text and args.skip_empty_text:
+            logging.warning(
+                "Text is empty after cleaning for segment '%s', skipping",
+                segment.name,
+            )
+            continue
         if segment.end - segment.start <= 0:
-            raise RuntimeError(f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")
+            raise RuntimeError(
+                f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}")
         if segment.end > duration + 0.1:  # allow 100ms tolerance
             raise RuntimeError(
-               f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}, recording duration={duration}")
+                f"Invalid segment duration for segment '{seg}': start={segment.start}, end={segment.end}, recording duration={duration}")
 
         # Supervision object
         supervision = SupervisionSegment(

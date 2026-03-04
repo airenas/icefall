@@ -10,6 +10,7 @@ lang_dir=$(data_dir)/lang_bpe_${vocab_size}
 log?=INFO
 python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 decode_limit?=0
+skip_empty?=0
 
 epoch?=30
 avg?=15
@@ -50,7 +51,7 @@ $(data_dir)/manifests/cuts_tvr.jsonl.gz: | $(data_dir)/manifests
           --output-file $@ --audio-take-last 1			  		  		  		  
 $(data_dir)/manifests/cuts_babl.jsonl.gz: | $(data_dir)/manifests
 	$(python_cmd) local/prepare_test_cut.py --corpus-dir $(corpus_dir)/BABL --transcript-dir $(corpus_dir)/kaldi-data/16-BABL \
-          --output-file $@ --audio-take-last 1			  		  		  		  		  
+          --output-file $@ --audio-take-last 1 --skip-empty-text $(skip_empty)			  		  		  		  		  
 ##############################################################
 $(data_dir)/fbank/cuts_%.jsonl.gz: $(data_dir)/manifests/cuts_%.jsonl.gz  | $(data_dir)/fbank
 	$(python_cmd) ./../../liepa3/ASR/local/compute_fbank.py --cuts $< --output-dir $(data_dir)/fbank \
