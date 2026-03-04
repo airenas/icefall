@@ -88,7 +88,7 @@ $(data_dir)/recognized/cuts_%.jsonl.gz: $(data_dir)/fbank-chunks/cuts_%.jsonl.gz
 rec/adam: $(data_dir)/recognized/cuts_adam.jsonl.gz
 .PHONY: rec/adam
 ##############################################################
-$(data_dir)/results/.%.done.rec: $(data_dir)/fbank/cuts_%.jsonl.gz | $(data_dir)/results
+$(data_dir)/results/.%.done.$(decoding_method): $(data_dir)/fbank/cuts_%.jsonl.gz | $(data_dir)/results
 	$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
@@ -107,23 +107,23 @@ $(data_dir)/results/.%.done: $(data_dir)/merged/cuts_%.jsonl.gz  | $(data_dir)/r
 	$(python_cmd) ./long_file_recog/compute_wer.py --manifest-in $< --out-dir $(data_dir)/results \
 	--name $*
 	touch $@
-wer/adam: $(data_dir)/results/.adam.done.rec
+wer/adam: $(data_dir)/results/.adam.done.$(decoding_method)
 .PHONY: wer/adam	
-wer/arm: $(data_dir)/results/.arm.done.rec
+wer/arm: $(data_dir)/results/.arm.done.$(decoding_method)
 .PHONY: wer/arm
-wer/priv: $(data_dir)/results/.priv.done.rec
+wer/priv: $(data_dir)/results/.priv.done.$(decoding_method)
 .PHONY: wer/priv
 wer/tel1: $(data_dir)/results/.tel1.done
 .PHONY: wer/tel1
-wer/tels: $(data_dir)/results/.tels.done.rec
+wer/tels: $(data_dir)/results/.tels.done.$(decoding_method)
 .PHONY: wer/tels
-wer/lrv: $(data_dir)/results/.lrv.done.rec
+wer/lrv: $(data_dir)/results/.lrv.done.$(decoding_method)
 .PHONY: wer/lrv
-wer/spek: $(data_dir)/results/.spek.done.rec
+wer/spek: $(data_dir)/results/.spek.done.$(decoding_method)
 .PHONY: wer/spek
-wer/tvr: $(data_dir)/results/.tvr.done.rec
+wer/tvr: $(data_dir)/results/.tvr.done.$(decoding_method)
 .PHONY: wer/tvr
-wer/babl: $(data_dir)/results/.babl.done.rec
+wer/babl: $(data_dir)/results/.babl.done.$(decoding_method)
 .PHONY: wer/babl
 wer: wer/priv wer/adam wer/arm wer/tel1 wer/tels wer/lrv wer/spek wer/tvr wer/babl
 .PHONY: wer

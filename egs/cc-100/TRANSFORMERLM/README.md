@@ -8,6 +8,11 @@ These scripts are prepared to be run inside [docker](../../liepa3/ASR/Makefile.d
 
 From: https://k2-fsa.github.io/icefall/recipes/RNN-LM/librispeech/lm-training.html
 
+### Stats
+
+Words: 1289M
+Sentences: 130M
+
 
 ### Requirements
 
