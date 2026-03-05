@@ -17,10 +17,12 @@
 
 | decoding method                      | test       | test-cv | comment   |
 |--------------------------------------|------------|---------|-----------|
-| greedy_search                        | 1.91       | 6.61    |  |
-| modified_beam_search                 | 1.90       | 6.67    |  |
-| fast_beam_search                     | 1.90       | 6.58    |  |
+| greedy_search                        | 1.91       | 6.43    |  |
+| modified_beam_search                 | 1.90       | 6.48    |  |
+| fast_beam_search                     | 1.91       | 6.42    |  |
 | fast_beam_search_nbest_oracle        | (0.63)     | (3.38)  | <- oracle |
+| m2: modified_beam_search  + nbest transformer rescore  | 1.88       | 6.03   | NBest rescore |
+
 
 ###### Train params
 
@@ -29,6 +31,20 @@
 ###### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp/v02 --bpe-model data/lang_bpe_500/bpe.model --decoding-method greedy_search --beam-size 4 --decode-limit 0 --use-cr-ctc 1 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 400`
 
+
+##### m2
+
+Transformer lm trained on cc-100. Cleaned (removed any sentence containg non puncts or letter), auto split into sentences.
+Words: 1289M
+
+###### LM train params
+```bash
+./transformer_lm/train.py --world-size 1 --exp-dir /workspace/icefall/egs/liepa3/ASR/data/transformerlm/v01 --start-epoch 0 --num-epochs 10 --use-fp16 0 --num-layers 12 --tie-weights 1 --batch-size 25 --lm-data /workspace/icefall/egs/liepa3/ASR/data/transformerlm/lt.train.sorted.pt --lm-data-valid /workspace/icefall/egs/liepa3/ASR/data/transformerlm/lt.dev.sorted.pt
+```
+###### Decode params
+```bash
+./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp02/exp/v02 --bpe-model data/exp02/lang_bpe_500/bpe.model --decoding-method modified_beam_search_lm_rescore 	--beam-size 4 --decode-limit 0 --use-cr-ctc 1 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 300 --use-averaged-model 1 --use-shallow-fusion 0 --lm-type transformer --lm-exp-dir data/exp02/transformerlm/v01 --lm-epoch 3 --lm-avg 1 --lm-scale 0.05
+```
 
 ### zipformer 
 
