@@ -8,6 +8,7 @@ from lhotse import RecordingSet, SupervisionSet, CutSet, Recording, SupervisionS
 from tqdm import tqdm
 
 from egs.liepa3.ASR.local.text_utils import clean_text, clean_tags, drop_sil
+from icefall import str2bool
 
 
 def get_args():
@@ -41,7 +42,7 @@ def get_args():
 
     parser.add_argument(
         "--skip-empty-text",
-        type=bool,
+        type=str2bool,
         default=False,
         help="""Whether to skip segments with empty text after cleaning.
                 """,
