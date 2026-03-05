@@ -91,7 +91,7 @@ rec/adam: $(data_dir)/recognized/cuts_adam.jsonl.gz
 $(data_dir)/results/.%.done.$(decoding_method): $(data_dir)/fbank/cuts_%.jsonl.gz | $(data_dir)/results
 	$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
-		--decoding-method $(decoding_method) \
+		--decoding-method $(decoding_method) \	
 		--beam-size 4 --decode-limit $(decode_limit) --num-buckets=2 \
 		$(decode_params) \
 		$(lm_params) \
@@ -125,7 +125,7 @@ wer/tvr: $(data_dir)/results/.tvr.done.$(decoding_method)
 .PHONY: wer/tvr
 wer/babl: $(data_dir)/results/.babl.done.$(decoding_method)
 .PHONY: wer/babl
-wer: wer/priv wer/adam wer/arm wer/tel1 wer/tels wer/lrv wer/spek wer/tvr wer/babl
+wer: wer/priv wer/adam wer/arm wer/tels wer/lrv wer/spek wer/tvr wer/babl
 .PHONY: wer
 ##############################################################
 .EXPORT_ALL_VARIABLES:
