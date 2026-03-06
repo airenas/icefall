@@ -7,8 +7,9 @@ python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 
 data_dir?=data
 url?=https://data.statmt.org/cc-100/lt.txt.xz
-limit?=10000000000
 lex_port?=8080
+splitter_url?=http://host.docker.internal:$(lex_port)
+limit?=10000000000
 gpus?=1
 
 batch_size?=50
@@ -27,7 +28,7 @@ $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 	mv $@_ $@	
 
 $(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
-	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url http://host.docker.internal:$(lex_port) \
+	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url $(splitter_url) \
 		--continue-if-exists
 	mv $@_ $@
 ###################################################################
@@ -96,7 +97,7 @@ train/rnn: $(exp_dir)/.rnn.done
 .PHONY: train/rnn
 ###################################################################
 perplexity/rnn: 
-    $(python_cmd) ../../../icefall/rnn_lm/compute_perplexity.py \
+	$(python_cmd) ../../../icefall/rnn_lm/compute_perplexity.py \
     --exp-dir $(exp_dir) \
     --epoch 10 \
     --avg 2 \

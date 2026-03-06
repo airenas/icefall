@@ -41,6 +41,8 @@ import torch
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
+
 from dataset import get_dataloader
 from lhotse.utils import fix_random_seed
 from model import RnnLmModel
@@ -405,7 +407,7 @@ def compute_validation_loss(
 
     tot_loss = MetricsTracker()
 
-    for batch_idx, batch in enumerate(valid_dl):
+    for batch_idx, batch in enumerate(tqdm(valid_dl, desc="Validating")):
         x, y, sentence_lengths = batch
         with torch_autocast(enabled=params.use_fp16):
             loss, loss_info = compute_loss(
@@ -468,7 +470,7 @@ def train_one_epoch(
 
     cur_batch_idx = params.get("cur_batch_idx", 0)
 
-    for batch_idx, batch in enumerate(train_dl):
+    for batch_idx, batch in enumerate(tqdm(train_dl, desc="Training")):
         if batch_idx < cur_batch_idx:
             continue
         cur_batch_idx = batch_idx
