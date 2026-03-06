@@ -89,7 +89,7 @@ $(exp_dir)/.rnn.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.p
     --num-layers 3 \
     --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.train.sorted.pt \
-    --lm-data-valid $(data_dir)/lt.dev.sorted.pt
+    --lm-data-valid $(data_dir)/lt.dev.sorted.pt \
     --save_every_n 5000
 	touch $@
 train/transformer: $(exp_dir)/.transformer.done
