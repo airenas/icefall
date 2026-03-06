@@ -2,7 +2,7 @@
 #####################################################################################
 service=airenas/icefall
 version?=dev
-docker_base_version?=torch2.4.1-cuda12.2
+docker_base_version?=torch2.4.1-cuda12.4
 docker_data_dir?=
 docker_corpus_dir?=
 docker_user?=1000:1000
@@ -23,8 +23,8 @@ run:
 	docker run --gpus all --rm ${docker_mode} \
 		--name liepa3-asr \
 	  	-v $(PWD)/../../../egs:/workspace/icefall/egs \
-		-v $(PWD)/../../../icefall/transformer_lm:/workspace/icefall/egs/cc-100/TRANSFORMERLM/transformer_lm \
-		-v $(PWD)/../../../icefall/rnn_lm:/workspace/icefall/egs/cc-100/TRANSFORMERLM/rnn_lm \
+		-v $(PWD)/../../../icefall/transformer_lm:/workspace/icefall/icefall/transformer_lm \
+		-v $(PWD)/../../../icefall/rnn_lm:/workspace/icefall/icefall/rnn_lm \
 		-v $(docker_corpus_dir):/workspace/icefall/egs/liepa3/ASR/corpus \
 		-v $(docker_data_dir):/workspace/icefall/egs/liepa3/ASR/data \
 		-u $(docker_user) -e HOME=/tmp \
