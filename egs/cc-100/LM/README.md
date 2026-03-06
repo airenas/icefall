@@ -1,4 +1,4 @@
-# TransformerLM scripts for CC-100 (LT)
+# TransformerLM/RNNLM scripts for CC-100 (LT)
 
 ## Overview
 
@@ -25,10 +25,10 @@ Prepare Makefile.options. Example:
 
 ```Makefile
 ## datasets preparation dir
-data_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm
+data_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm
 
 ## lm model output
-exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm/v01
+exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/transformer/v01
 
 ## limit for testing sample run
 ## limit=500000 #
@@ -39,7 +39,7 @@ bpe_model=/workspace/icefall/egs/liepa3/ASR/data/lang_bpe_500/bpe.model
 
 ### CC-100 data preparation
 
-K2 scripts require each sentence to be on a separate line. Here the
+K2 scripts require each sentence to be on a separate line. Here a
 `semantikadocker.vdu.lt/lex:2021.04.02` Docker-based service is used to split
 the text into sentences.
 
@@ -55,7 +55,7 @@ make -f Makefile.docker run
 #### On docker container
 
 ```bash
-cd cc-100/TRANSFORMERLM
+cd cc-100/LM
 make prepare/cc-100 prepare
 ```
 
@@ -65,10 +65,16 @@ make prepare/cc-100 prepare
 #### On docker container
 
 ```bash
-cd cc-100/TRANSFORMERLM
-make prepare/cc-100 prepare
+cd cc-100/LM
+### transformer LM training
+make train/transformer
+
+### rnn LM training
+make train/rnn
+
 ```
 
 The model will be saved to the location configured in Makefile.options:
-`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/transformerlm/v01`
-
+`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/tansformer/v01`
+or 
+`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/rnn/v01`

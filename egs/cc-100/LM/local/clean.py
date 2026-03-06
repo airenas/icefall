@@ -5,7 +5,7 @@ import os
 
 from tqdm import tqdm
 
-from shared.text_utils import clean_text
+from egs.liepa3.ASR.local.text_utils import clean_text
 
 
 def get_args():

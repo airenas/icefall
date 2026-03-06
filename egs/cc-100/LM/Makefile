@@ -2,13 +2,14 @@
 cfg?=Makefile.options
 -include $(cfg)
 ###################################################################
-LOGLEVEL?=INFO
-python_cmd?=python3
+log?=INFO
+python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 
 data_dir?=data
 url?=https://data.statmt.org/cc-100/lt.txt.xz
 limit?=10000000000
 lex_port?=8080
+gpus?=1
 
 batch_size?=50
 ###################################################################
@@ -60,12 +61,10 @@ $(data_dir)/lt.%.sorted.pt: $(data_dir)/lt.%.pt
 prepare: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt $(data_dir)/lt.test.sorted.pt
 .PHONY: prepare
 ###################################################################
-transformer_lm: 
-	ln -s ../../../icefall/transformer_lm transformer_lm
 ### k2 training
-$(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | transformer_lm
-	$(python_cmd) ./transformer_lm/train.py \
-    --world-size 1 \
+$(exp_dir)/.transformer.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt 
+	$(python_cmd) ../../../icefall/transformer_lm/train.py \
+    --world-size $(gpus) \
     --exp-dir $(exp_dir) \
     --start-epoch 0 \
     --num-epochs 10 \
@@ -76,20 +75,37 @@ $(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | 
     --lm-data $(data_dir)/lt.train.sorted.pt \
     --lm-data-valid $(data_dir)/lt.dev.sorted.pt
 	touch $@
-train: $(exp_dir)/.done
-.PHONY: train	
+$(exp_dir)/.rnn.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt 
+	$(python_cmd) ../../../icefall/rnn_lm/train.py \
+    --world-size $(gpus) \
+    --exp-dir $(exp_dir) \
+    --start-epoch 0 \
+    --num-epochs 10 \
+    --use-fp16 0 \
+    --tie-weights 1 \
+    --embedding-dim 2048 \
+    --hidden-dim 2048 \
+    --num-layers 3 \
+    --batch-size $(batch_size) \
+    --lm-data $(data_dir)/lt.train.sorted.pt \
+    --lm-data-valid $(data_dir)/lt.dev.sorted.pt
+	touch $@
+train/transformer: $(exp_dir)/.transformer.done
+.PHONY: train/transformer
+train/rnn: $(exp_dir)/.rnn.done
+.PHONY: train/rnn
 ###################################################################
-calc/perplexity: $(exp_dir)/.done
-	$(python_cmd) ./transformer_lm/compute_perplexity.py \
-	--exp-dir $(exp_dir) \
+perplexity/rnn: 
+    $(python_cmd) ../../../icefall/rnn_lm/compute_perplexity.py \
+    --exp-dir $(exp_dir) \
     --epoch 10 \
     --avg 2 \
-	--embedding-dim 2048 \
+    --embedding-dim 2048 \
     --hidden-dim 2048 \
     --num-layers 3 \
     --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.test.sorted.pt
-.PHONY: calc/perplexity
+.PHONY: perplexity/rnn
 ###################################################################
 ## just clean data after download
 clean/cc-100:
@@ -97,4 +113,4 @@ clean/cc-100:
 .PHONY: clean/cc-100
 ###################################################################
 .EXPORT_ALL_VARIABLES:
-	
+
