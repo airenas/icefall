@@ -91,7 +91,7 @@ $(data_dir)/results/.%.done.$(decoding_method): $(data_dir)/fbank/cuts_%.jsonl.g
 	$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
-		--beam-size 4 --decode-limit $(decode_limit) --num-buckets=2 \
+		--decode-limit $(decode_limit) --num-buckets=2 \
 		$(decode_params) \
 		$(lm_params) \
 		--test-cut $<

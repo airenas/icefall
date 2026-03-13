@@ -73,7 +73,7 @@ decode/common-voice: .decode/fbank/cuts_common-voice.jsonl.gz
 	$(python_cmd) ./zipformer/decode.py  --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
-		--beam-size 4 --decode-limit $(decode_limit) \
+		--decode-limit $(decode_limit) \
 		$(decode_params) \
 		$(lm_params) \
 		--test-cut $<

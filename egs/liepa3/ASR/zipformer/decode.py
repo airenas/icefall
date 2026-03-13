@@ -568,7 +568,7 @@ def decode_one_batch(
             hyps.append(hyp.split())
     elif params.decoding_method == "modified_beam_search_lm_rescore":
         # lm_scale_list = [0.01 * i for i in range(0, 10)]
-        lm_scale_list = [0.01, 0.1, 0.3, params.lm_scale]
+        lm_scale_list = [0.01, 0.1, 0.3, 0.4, 0.5, 0.6, 0.7, params.lm_scale]
         # logging.info(f"lm_scale_list: {lm_scale_list}")
 
         class LMWrapper(torch.nn.Module):
