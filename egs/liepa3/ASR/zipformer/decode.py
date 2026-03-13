@@ -585,7 +585,7 @@ def decode_one_batch(
                 nll_loss = res.reshape(batch_size, -1)
                 return nll_loss
 
-        if LM:
+        if LM and params.lm_type == "transformer":
             LM = LMWrapper(LM)
         ans_dict = modified_beam_search_lm_rescore(
             model=model,
