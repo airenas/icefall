@@ -109,6 +109,19 @@ onnx/export:
 		--chunk-size 16 \
 		$(export_params) \
 		--left-context-frames 128
+onnx/export/streaming:
+	$(python_cmd) ./zipformer/export-onnx-streaming-ctc.py \
+		--tokens $(lang_dir)/tokens.txt \
+		--exp-dir $(exp_dir) \
+		--bpe-model $(lang_dir)/bpe.model \
+		--use-averaged-model 1 \
+		--epoch $(epoch) \
+		--avg $(avg) \
+		--query-head-dim 32 \
+		--value-head-dim 12 \
+		--decoder-dim 512 \
+		--joiner-dim 512 \
+		$(export_params)
 onnx/decode-wav:
 	$(python_cmd) ./zipformer/onnx_pretrained_ctc.py \
 		--nn-model $(exp_dir)/model.onnx \
