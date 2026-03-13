@@ -104,7 +104,7 @@ onnx/export:
 		--value-head-dim 12 \
 		--decoder-dim 512 \
 		--joiner-dim 512 \
-		$(export_params) \
+		$(export_params)
 onnx/export/streaming:
 	$(python_cmd) ./zipformer/export-onnx-streaming-ctc.py \
 		--tokens $(lang_dir)/tokens.txt \
