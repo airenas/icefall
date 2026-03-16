@@ -56,9 +56,6 @@ import onnx
 import torch
 import torch.nn as nn
 from onnxruntime.quantization import QuantType, quantize_dynamic
-from scaling_converter import convert_scaled_to_non_scaled
-from train import add_model_arguments, get_model, get_params
-from zipformer import Zipformer2
 
 from icefall.checkpoint import (
     average_checkpoints,
@@ -67,6 +64,9 @@ from icefall.checkpoint import (
     load_checkpoint,
 )
 from icefall.utils import num_tokens, str2bool
+from scaling_converter import convert_scaled_to_non_scaled
+from train import add_model_arguments, get_model, get_params
+from zipformer import Zipformer2
 
 
 def get_parser():
@@ -112,8 +112,8 @@ def get_parser():
         type=int,
         default=15,
         help="Number of checkpoints to average. Automatically select "
-        "consecutive checkpoints before the checkpoint specified by "
-        "'--epoch' and '--iter'",
+             "consecutive checkpoints before the checkpoint specified by "
+             "'--epoch' and '--iter'",
     )
 
     parser.add_argument(
@@ -121,10 +121,10 @@ def get_parser():
         type=str2bool,
         default=True,
         help="Whether to load averaged model. Currently it only supports "
-        "using --epoch. If True, it would decode with the averaged model "
-        "over the epoch range from `epoch-avg` (excluded) to `epoch`."
-        "Actually only the models with epoch number of `epoch-avg` and "
-        "`epoch` are loaded for averaging. ",
+             "using --epoch. If True, it would decode with the averaged model "
+             "over the epoch range from `epoch-avg` (excluded) to `epoch`."
+             "Actually only the models with epoch number of `epoch-avg` and "
+             "`epoch` are loaded for averaging. ",
     )
 
     parser.add_argument(
@@ -170,6 +170,19 @@ def get_parser():
         default=False,
         help="Set it to true for model file size > 2GB",
     )
+    parser.add_argument(
+        "--version",
+        type=str,
+        default="0.1",
+        help="Version of the model. It is added to the meta data of the exported ONNX model.",
+    )
+
+    parser.add_argument(
+        "--author",
+        type=str,
+        default="VDU ASR Team",
+        help="Author of the model. It is added to the meta data of the exported ONNX model.",
+    )
 
     add_model_arguments(parser)
 
@@ -177,7 +190,7 @@ def get_parser():
 
 
 def add_meta_data(
-    filename: str, meta_data: Dict[str, str], use_external_data: bool = False
+        filename: str, meta_data: Dict[str, str], use_external_data: bool = False
 ):
     """Add meta data to an ONNX model. It is changed in-place.
 
@@ -233,10 +246,10 @@ class OnnxModel(nn.Module):
     """A wrapper for Zipformer and the ctc_head"""
 
     def __init__(
-        self,
-        encoder: Zipformer2,
-        encoder_embed: nn.Module,
-        ctc_output: nn.Module,
+            self,
+            encoder: Zipformer2,
+            encoder_embed: nn.Module,
+            ctc_output: nn.Module,
     ):
         """
         Args:
@@ -256,9 +269,9 @@ class OnnxModel(nn.Module):
         self.pad_length = 7 + 2 * 3
 
     def forward(
-        self,
-        x: torch.Tensor,
-        states: List[torch.Tensor],
+            self,
+            x: torch.Tensor,
+            states: List[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor, List[torch.Tensor]]:
         N = x.size(0)
         T = self.chunk_size * 2 + self.pad_length
@@ -312,9 +325,9 @@ class OnnxModel(nn.Module):
         return encoder_out, new_states
 
     def get_init_states(
-        self,
-        batch_size: int = 1,
-        device: torch.device = torch.device("cpu"),
+            self,
+            batch_size: int = 1,
+            device: torch.device = torch.device("cpu"),
     ) -> List[torch.Tensor]:
         """
         Returns a list of cached tensors of all encoder layers. For layer-i, states[i*6:(i+1)*6]
@@ -337,12 +350,14 @@ class OnnxModel(nn.Module):
 
 
 def export_streaming_ctc_model_onnx(
-    model: OnnxModel,
-    encoder_filename: str,
-    opset_version: int = 11,
-    dynamic_batch: bool = True,
-    use_whisper_features: bool = False,
-    use_external_data: bool = False,
+        model: OnnxModel,
+        encoder_filename: str,
+        opset_version: int = 11,
+        dynamic_batch: bool = True,
+        use_whisper_features: bool = False,
+        use_external_data: bool = False,
+        version: str = "0.1",
+        author: str = "VDU ASR Team",
 ) -> None:
     model.encoder.__class__.forward = model.encoder.__class__.streaming_forward
 
@@ -427,8 +442,8 @@ def export_streaming_ctc_model_onnx(
 
     meta_data = {
         "model_type": "zipformer2",
-        "version": "1",
-        "model_author": "k2-fsa",
+        "version": version,
+        "model_author": author,
         "comment": "streaming ctc zipformer2",
         "decode_chunk_len": str(decode_chunk_len),  # 32
         "T": str(T),  # 32+7+2*3=45
@@ -447,7 +462,7 @@ def export_streaming_ctc_model_onnx(
     logging.info(f"meta_data: {meta_data}")
 
     for i in range(len(init_state[:-2]) // 6):
-        build_inputs_outputs(init_state[i * 6 : (i + 1) * 6], i)
+        build_inputs_outputs(init_state[i * 6: (i + 1) * 6], i)
 
     # (batch_size, channels, left_pad, freq)
     embed_states = init_state[-2]
@@ -525,8 +540,8 @@ def main():
     if not params.use_averaged_model:
         if params.iter > 0:
             filenames = find_checkpoints(params.exp_dir, iteration=-params.iter)[
-                : params.avg
-            ]
+                        : params.avg
+                        ]
             if len(filenames) == 0:
                 raise ValueError(
                     f"No checkpoints found for"
@@ -554,8 +569,8 @@ def main():
     else:
         if params.iter > 0:
             filenames = find_checkpoints(params.exp_dir, iteration=-params.iter)[
-                : params.avg + 1
-            ]
+                        : params.avg + 1
+                        ]
             if len(filenames) == 0:
                 raise ValueError(
                     f"No checkpoints found for"
@@ -638,6 +653,8 @@ def main():
         dynamic_batch=params.dynamic_batch == 1,
         use_whisper_features=params.use_whisper_features,
         use_external_data=params.use_external_data,
+        version=args.version,
+        author=args.author,
     )
     logging.info(f"Exported model to {model_filename}")
 

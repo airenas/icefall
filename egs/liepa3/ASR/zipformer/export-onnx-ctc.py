@@ -73,6 +73,8 @@ import onnx
 import torch
 import torch.nn as nn
 from onnxruntime.quantization import QuantType, quantize_dynamic
+
+from egs.liepa3.ASR.zipformer.scaling import logaddexp_onnx
 from egs.liepa3.ASR.zipformer.scaling_converter import convert_scaled_to_non_scaled
 from egs.liepa3.ASR.zipformer.train import add_model_arguments, get_model, get_params
 from egs.liepa3.ASR.zipformer.zipformer import Zipformer2
@@ -316,6 +318,9 @@ def export_ctc_model_onnx(
 def main():
     args = get_parser().parse_args()
     args.exp_dir = Path(args.exp_dir)
+
+    logging.info("Overriding torch.logaddexp with scaling.logaddexp_onnx for ONNX export")
+    torch.logaddexp = logaddexp_onnx
 
     params = get_params()
     params.update(vars(args))
