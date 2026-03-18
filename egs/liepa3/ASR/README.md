@@ -105,8 +105,27 @@ make decode/common-voice
 ### export model to onnx
 
 ```bash
+## offline model
 make onnx/export
+
+## streaming model
+make onnx/export/streaming
 
 ### decode
 make onnx/decode-wav wavs="<some wav files>"
 ```
+
+### test onnx on sherpa
+
+Install shepa-onnx: `pip install sherpa-onnx`
+
+```bash
+## offline model test
+## sample on linux
+sherpa-onnx-alsa-offline --tokens=data/exp06/tokens.txt --zipformer-ctc-model=data/exp06/model.int8.onnx plughw:1,0
+
+## streaming model test
+sherpa-onnx-alsa --tokens=data/exp07/tokens.txt --zipformer2-ctc-model=data/exp07/ctc-epoch-30-avg-10-chunk-32-left-128.int8.onnx plughw:1,0
+
+```
+
