@@ -129,7 +129,7 @@ Number of model parameters: 148824074
 | ms2: zipformer + musan /greedy_search  | 3.98       | 10.98   |  |
 | ms1: zipformer/greedy_search                        | 6.39    | 15.46 |  |
 | *lm rescore* |
-| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore        | 3.15  | 7.92   | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
+| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore        | 3.15  | 7.92   | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50  --chunk-size 32 --left-context-frames 128|
 
 #### ms1: zipformer streaming
 ##### Train params
@@ -175,4 +175,3 @@ Number of model parameters: 66367431
 
 ##### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp09 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --causal 1 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --max-duration 800 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128`
-
