@@ -122,9 +122,12 @@ Number of model parameters: 148824074
 
 | model/decoding method                      | test       | test-cv | comment    |
 |--------------------------------------|------------|---------|---------------------|
-| ms3: zipformer (ctc) + musan /greedy_search         | 3.81  | 10.26   |  |
+| ms3: zipformer (ctc) + musan /greedy_search         | 3.81  | 10.26   | --chunk-size 32 --left-context-frames 128 |
+| ms3: zipformer (ctc) + musan /greedy_search         | 3.43  |  9.54   | --chunk-size 64 --left-context-frames 256 |
+| ms3: zipformer (ctc) + musan /greedy_search         | 3.14  |  8.83   | --chunk-size 128 --left-context-frames 256 |
+| ms4: zipformer (ctc) /greedy_search                 | 3.89  | 10.57   | --chunk-size 32 --left-context-frames 128 |
 | ms2: zipformer + musan /greedy_search  | 3.98       | 10.98   |  |
-| ms1: zipformer/greedy_search                        | 6.39       | 15.46   |  |
+| ms1: zipformer/greedy_search                        | 6.39    | 15.46 |  |
 | *lm rescore* |
 | ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore        | 3.15  | 7.92   | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
 
@@ -160,3 +163,16 @@ Number of model parameters: 66367431
 
 ##### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp07 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method modified_beam_search_lm_rescore --decode-limit 0 	--causal 1 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --max-duration 700 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128 --beam-size 12 	--use-shallow-fusion 0 --lm-type rnn --lm-exp-dir data/exp02/lm/rnn/v01 --lm-epoch 4 --lm-avg 1 --lm-scale 0.4 --test-cut <>`
+
+
+#### ms4: zipformer (ctc) streaming 
+
+Number of model parameters: 66367431
+
+##### Train params
+
+`./zipformer/train.py --world-size 2 --num-epochs 30 --start-epoch 1 --causal 1 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 -use-attention-decoder 0 --ctc-loss-scale 0.1 --enable-spec-aug 1 --enable-musan 0  --cr-loss-scale 0.02 --max-duration 400 --base-lr 0.045 --use-fp16 1`
+
+##### Decode params
+`./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp09 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --causal 1 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --max-duration 800 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128`
+
