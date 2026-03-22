@@ -22,6 +22,7 @@
 | m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    |  |
 | m1: zipformer (ctc cr) / fast_beam_search         | 1.91       | 6.42    |  |
 | m3: zipformer (ctc)  + musan / greedy_search     | 2.18       | 7.38  |  |
+| m4: zipformer (ctc)  / greedy_search     | 2.29       | 7.35  |  |
 | m0: zipformer / greedy_search            | 2.56       | 7.87    | --epoch 30 --avg 15 |
 |*with lm*|
 | m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
@@ -115,6 +116,15 @@ Number of model parameters: 148824074
 ###### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp06 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 700 --use-averaged-model 1` 
 
+
+##### m4
+
+###### Train params
+
+`model_params=--use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --ctc-loss-scale 0.1 --enable-spec-aug 1 --enable-musan 0  --cr-loss-scale 0.02 --max-duration 700 --use-fp16 1 --base-lr 0.045`
+
+###### Decode params
+`./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp08 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 800 --use-averaged-model 1 --beam-size 4 --test-cut data/exp03/fbank/cuts_test.jsonl.gz` 
 
 ### streaming models
 
