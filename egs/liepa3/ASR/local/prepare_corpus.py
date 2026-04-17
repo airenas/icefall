@@ -8,6 +8,8 @@ from pathlib import Path
 from lhotse import RecordingSet, SupervisionSet, CutSet, Recording, SupervisionSegment
 from tqdm import tqdm
 
+from text_utils import clean_text
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -41,16 +43,6 @@ def get_args():
     )
 
     return parser.parse_args()
-
-
-def clean_text(param: str) -> str:
-    """Clean the input text.
-    """
-
-    # remove punctuations
-    res = "".join(c if c.isalnum() or c.isspace() else " " for c in param)
-    # remove double spaces
-    return " ".join(res.split()).casefold()
 
 
 def main():
@@ -100,7 +92,13 @@ def main():
 
             speaker = row["Speaker_id"]
             start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
-            text = clean_text(row["Utterance_text"])
+            text, ok = clean_text(row["Utterance_text"])
+            if not ok:
+                logging.warning(
+                    "Text contains invalid characters '%s'",
+                    row["Utterance_text"],
+                )
+                continue
 
             recordings.append(recording)
 

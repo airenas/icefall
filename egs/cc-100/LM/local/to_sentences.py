@@ -28,6 +28,12 @@ def get_args():
         help="""Output file
             """,
     )
+    parser.add_argument(
+        "--continue-if-exists",
+        action="store_true",
+        help="""Continue output file even if splitter fails for some input. Default: False.
+                """,
+    )
 
     return parser.parse_args()
 
@@ -53,6 +59,10 @@ class Data:
                 break
             take_chars = i_from + count
             res.append(self.buffer[i_from:i_from + count].strip())
+        if take_chars == 0:
+            logging.warning(f"take_chars is 0, s: {s}, drop buffer!!!!!")
+            take_chars = len(self.buffer)
+
         self.buffer = self.buffer[take_chars:]
         return res
 
@@ -98,16 +108,32 @@ def main():
     data = Data()
     wrote = 0
 
-    with open(args.output, "w", encoding="utf-8") as f_out:
-        with open(args.input, "r", encoding="utf-8") as f:
-            for line in tqdm(f, desc="Reading file"):
-                line = line.rstrip("\n")
-                data.append(line)
+    open_mode = "w"
+    seek = 0
+    if os.path.exists(args.output):
+        if args.continue_if_exists:
+            logging.warning(f"Output file {args.output} already exists, but we will continue writing to it.")
+            open_mode = "a"
+            seek = os.path.getsize(args.output)
 
-                # If single line is bigger than MAX_CHARS → flush first
-                if len(data.buffer) > MAX_CHARS:
-                    sentences = split(args.splitter_url, data, False)
-                    wrote += write_out(f_out, sentences)
+    logging.info(f"Output file: {args.output}, open mode: {open_mode}")
+    with open(args.output, open_mode, encoding="utf-8") as f_out:
+        total = os.path.getsize(args.input)
+        with open(args.input, "r", encoding="utf-8") as f:
+            if seek:
+                logging.info(f"Seeking input: {args.input} from {seek}")
+                f.seek(seek)
+            with tqdm(total=total, initial=seek , unit="B", unit_scale=True, desc="Splitting into sentences") as pbar:
+                for line in f:
+                    pbar.update(len(line.encode("utf-8")))
+
+                    line = line.rstrip("\n")
+                    data.append(line)
+
+                    # If single line is bigger than MAX_CHARS → flush first
+                    if len(data.buffer) > MAX_CHARS:
+                        sentences = split(args.splitter_url, data, False)
+                        wrote += write_out(f_out, sentences)
 
             # send remaining data
             if data.buffer:

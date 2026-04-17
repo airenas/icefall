@@ -1,4 +1,4 @@
-# RNNLM scripts for CC-100 (LT)
+# TransformerLM/RNNLM scripts for CC-100 (LT)
 
 ## Overview
 
@@ -7,6 +7,11 @@ This directory prepares https://data.statmt.org/cc-100/ text data and trains an 
 These scripts are prepared to be run inside [docker](../../liepa3/ASR/Makefile.docker).
 
 From: https://k2-fsa.github.io/icefall/recipes/RNN-LM/librispeech/lm-training.html
+
+### Stats
+
+Words: 1289M
+Sentences: 130M
 
 
 ### Requirements
@@ -20,10 +25,10 @@ Prepare Makefile.options. Example:
 
 ```Makefile
 ## datasets preparation dir
-data_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm
+data_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm
 
 ## lm model output
-exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm/v01
+exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/transformer/v01
 
 ## limit for testing sample run
 ## limit=500000 #
@@ -34,7 +39,7 @@ bpe_model=/workspace/icefall/egs/liepa3/ASR/data/lang_bpe_500/bpe.model
 
 ### CC-100 data preparation
 
-K2 scripts require each sentence to be on a separate line. Here the
+K2 scripts require each sentence to be on a separate line. Here a
 `semantikadocker.vdu.lt/lex:2021.04.02` Docker-based service is used to split
 the text into sentences.
 
@@ -50,23 +55,26 @@ make -f Makefile.docker run
 #### On docker container
 
 ```bash
+cd cc-100/LM
 make prepare/cc-100 prepare
 ```
 
 
 ### Training
 
-#### Start docker for running scripts
-```bash
-cd ../../liepa3/ASR/
-make -f Makefile.docker run
-```
 #### On docker container
 
 ```bash
-make train
+cd cc-100/LM
+### transformer LM training
+make train/transformer
+
+### rnn LM training
+make train/rnn
+
 ```
 
 The model will be saved to the location configured in Makefile.options:
-`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/rnnlm/v01`
-
+`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/tansformer/v01`
+or 
+`exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/rnn/v01`

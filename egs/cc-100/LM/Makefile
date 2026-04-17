@@ -2,13 +2,17 @@
 cfg?=Makefile.options
 -include $(cfg)
 ###################################################################
-LOGLEVEL?=INFO
-python_cmd?=python3
+log?=INFO
+python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 
 data_dir?=data
 url?=https://data.statmt.org/cc-100/lt.txt.xz
-limit?=10000000000
 lex_port?=8080
+splitter_url?=http://host.docker.internal:$(lex_port)
+limit?=10000000000
+gpus?=1
+
+batch_size?=50
 ###################################################################
 $(data_dir):
 	mkdir -p $@
@@ -23,13 +27,14 @@ $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 	head -n $(limit) $(data_dir)/lt.txt > $@_
 	mv $@_ $@	
 
-$(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt	
-	$(python_cmd) ./local/to_sentences.py --input $< --output $@ --splitter-url http://host.docker.internal:$(lex_port)
-
+$(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
+	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url $(splitter_url) \
+		--continue-if-exists
+	mv $@_ $@
 ###################################################################
 ### lex docker must be started on host
 start/lex:
-	docker run --rm -it -p $(lex_port):8080 --name lex semantikadocker.vdu.lt/lex:2021.04.02
+	docker run --rm -it -p $(lex_port):8080 --log-driver=none --name lex semantikadocker.vdu.lt/lex:2021.04.02
 ###################################################################
 prepare/cc-100: $(data_dir)/lt.sentences.txt
 .PHONY: prepare/cc-100
@@ -57,12 +62,23 @@ $(data_dir)/lt.%.sorted.pt: $(data_dir)/lt.%.pt
 prepare: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt $(data_dir)/lt.test.sorted.pt
 .PHONY: prepare
 ###################################################################
-rnn_lm: 
-	ln -s ../../../icefall/rnn_lm rnn_lm
 ### k2 training
-$(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | rnn_lm
-	$(python_cmd) ./rnn_lm/train.py \
-    --world-size 1 \
+$(exp_dir)/.transformer.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt 
+	$(python_cmd) ../../../icefall/transformer_lm/train.py \
+    --world-size $(gpus) \
+    --exp-dir $(exp_dir) \
+    --start-epoch 0 \
+    --num-epochs 10 \
+    --use-fp16 0 \
+    --num-layers 12 \
+    --tie-weights 1 \
+    --batch-size $(batch_size) \
+    --lm-data $(data_dir)/lt.train.sorted.pt \
+    --lm-data-valid $(data_dir)/lt.dev.sorted.pt
+	touch $@
+$(exp_dir)/.rnn.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt 
+	$(python_cmd) ../../../icefall/rnn_lm/train.py \
+    --world-size $(gpus) \
     --exp-dir $(exp_dir) \
     --start-epoch 0 \
     --num-epochs 10 \
@@ -71,32 +87,32 @@ $(exp_dir)/.done: $(data_dir)/lt.train.sorted.pt $(data_dir)/lt.dev.sorted.pt | 
     --embedding-dim 2048 \
     --hidden-dim 2048 \
     --num-layers 3 \
-    --batch-size 300 \
+    --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.train.sorted.pt \
-    --lm-data-valid $(data_dir)/lt.dev.sorted.pt
+    --lm-data-valid $(data_dir)/lt.dev.sorted.pt \
+    --save-every-n 5000
 	touch $@
-train: $(exp_dir)/.done
-.PHONY: train	
+train/transformer: $(exp_dir)/.transformer.done
+.PHONY: train/transformer
+train/rnn: $(exp_dir)/.rnn.done
+.PHONY: train/rnn
 ###################################################################
-calc/perplexity: $(exp_dir)/.done
-	$(python_cmd) ./rnn_lm/compute_perplexity.py \
-	--exp-dir $(exp_dir) \
+perplexity/rnn: 
+	$(python_cmd) ../../../icefall/rnn_lm/compute_perplexity.py \
+    --exp-dir $(exp_dir) \
     --epoch 10 \
     --avg 2 \
-	--embedding-dim 2048 \
+    --embedding-dim 2048 \
     --hidden-dim 2048 \
     --num-layers 3 \
-    --batch-size 300 \
+    --batch-size $(batch_size) \
     --lm-data $(data_dir)/lt.test.sorted.pt
-.PHONY: calc/perplexity
+.PHONY: perplexity/rnn
 ###################################################################
 ## just clean data after download
 clean/cc-100:
 	rm -f $(data_dir)/lt.ready.txt
 .PHONY: clean/cc-100
 ###################################################################
-
 .EXPORT_ALL_VARIABLES:
 
-
-	

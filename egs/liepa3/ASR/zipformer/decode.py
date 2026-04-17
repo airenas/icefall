@@ -105,10 +105,10 @@ import k2
 import sentencepiece as spm
 import torch
 import torch.nn as nn
-from lhotse import CutSet, set_caching_enabled
+from lhotse import set_caching_enabled, CutSet
+from tqdm import tqdm
 
-from asr_datamodule import Liepa3AsrDataModule
-from beam_search import (
+from egs.liepa3.ASR.zipformer.beam_search import (
     beam_search,
     fast_beam_search_nbest,
     fast_beam_search_nbest_LG,
@@ -122,6 +122,7 @@ from beam_search import (
     modified_beam_search_lm_shallow_fusion,
     modified_beam_search_LODR,
 )
+from egs.liepa3.ASR.zipformer.asr_datamodule import Liepa3AsrDataModule
 from icefall import ContextGraph, LmScorer, NgramLm
 from icefall.checkpoint import (
     average_checkpoints,
@@ -137,7 +138,7 @@ from icefall.utils import (
     str2bool,
     write_error_stats,
 )
-from train import add_model_arguments, get_model, get_params
+from egs.liepa3.ASR.zipformer.train import add_model_arguments, get_model, get_params
 
 LOG_EPS = math.log(1e-10)
 
@@ -380,9 +381,16 @@ def get_parser():
     parser.add_argument(
         "--test-cut",
         type=str,
-        default="",
+        required=True,
         help="""Path to a CutSet for test decoding.""",
     )
+    parser.add_argument(
+        "--decode-limit",
+        type=int,
+        default=0,
+        help="""Limit the number of utterances to decode.""",
+    )
+    
 
     add_model_arguments(parser)
 
@@ -559,7 +567,26 @@ def decode_one_batch(
         for hyp in sp.decode(hyp_tokens):
             hyps.append(hyp.split())
     elif params.decoding_method == "modified_beam_search_lm_rescore":
-        lm_scale_list = [0.01 * i for i in range(10, 50)]
+        # lm_scale_list = [0.01 * i for i in range(0, 10)]
+        lm_scale_list = [0.01, 0.1, 0.3, 0.4, 0.5, 0.6, 0.7, params.lm_scale]
+        # logging.info(f"lm_scale_list: {lm_scale_list}")
+
+        class LMWrapper(torch.nn.Module):
+            def __init__(self, lm):
+                super().__init__()
+                self._lm = lm
+
+            def lm(self, x, y, lengths=None):
+                # Ignore lengths and call the real LM
+                batch_size = x.size(0)
+                # logging.info(f"x: {x.ndim} {x}\ny: {y}\n l: {lengths}")
+                res = self._lm.lm(x = x, y =y, x_lens=lengths)
+                # logging.info(f"LM output: {res.ndim} {res}")
+                nll_loss = res.reshape(batch_size, -1)
+                return nll_loss
+
+        if LM and params.lm_type == "transformer":
+            LM = LMWrapper(LM)
         ans_dict = modified_beam_search_lm_rescore(
             model=model,
             encoder_out=encoder_out,
@@ -682,7 +709,7 @@ def decode_dataset(
     try:
         num_batches = len(dl)
     except TypeError:
-        num_batches = "?"
+        num_batches = None
 
     if params.decoding_method == "greedy_search":
         log_interval = 50
@@ -690,7 +717,8 @@ def decode_dataset(
         log_interval = 20
 
     results = defaultdict(list)
-    for batch_idx, batch in enumerate(dl):
+    pbar = tqdm(dl, total=num_batches, desc="Decoding")
+    for batch_idx, batch in enumerate(pbar):
         texts = batch["supervisions"]["text"]
         cut_ids = [cut.id for cut in batch["supervisions"]["cut"]]
 
@@ -709,6 +737,11 @@ def decode_dataset(
 
         for name, hyps in hyps_dict.items():
             this_batch = []
+            if len(hyps) != len(texts):
+                logging.info(f"Number of hyps: {len(hyps)}, Number of texts: {len(texts)}")
+                for i, (h, t) in enumerate(zip(hyps, texts)):
+                    if not h:
+                        logging.info(f"Empty hyp at index {i}, text: {t}")
             assert len(hyps) == len(texts)
             for cut_id, hyp_words, ref_text in zip(cut_ids, hyps, texts):
                 ref_words = ref_text.split()
@@ -717,11 +750,8 @@ def decode_dataset(
             results[name].extend(this_batch)
 
         num_cuts += len(texts)
+        pbar.set_postfix(cuts=num_cuts)
 
-        if batch_idx % log_interval == 0:
-            batch_str = f"{batch_idx}/{num_batches}"
-
-            logging.info(f"batch {batch_str}, cuts processed until now is {num_cuts}")
     return results
 
 
@@ -1049,6 +1079,8 @@ def main():
 
     logging.info(f"test cut {args.test_cut}")
     test_cuts = CutSet.from_file(args.test_cut)
+    if params.decode_limit > 0:
+        test_cuts = test_cuts.subset(first=params.decode_limit)
 
     cut_name = Path(args.test_cut).stem
 

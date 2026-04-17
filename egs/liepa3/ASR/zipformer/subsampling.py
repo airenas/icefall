@@ -20,7 +20,7 @@ import warnings
 from typing import Tuple
 
 import torch
-from scaling import (
+from egs.liepa3.ASR.zipformer.scaling import (
     Balancer,
     BiasNorm,
     Dropout3,

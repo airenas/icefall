@@ -21,9 +21,9 @@ from typing import Optional, Tuple
 import k2
 import torch
 import torch.nn as nn
-from encoder_interface import EncoderInterface
+from egs.liepa3.ASR.zipformer.encoder_interface import EncoderInterface
 from lhotse.dataset import SpecAugment
-from scaling import ScaledLinear
+from egs.liepa3.ASR.zipformer.scaling import ScaledLinear
 
 from icefall.utils import add_sos, make_pad_mask, time_warp, torch_autocast
 

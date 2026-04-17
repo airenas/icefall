@@ -23,6 +23,13 @@ def main():
         """,
     )
     parser.add_argument(
+        "--max-test-lines",
+        type=int,
+        default=20000,
+        help="""Maximum number of lines for the test/dev set.
+        """,
+    )
+    parser.add_argument(
         "--output-template",
         type=str,
         help="""Output template, should contain `{}` as a placeholder for split name.
@@ -60,11 +67,19 @@ def main():
                 f_train.write(line + "\n")
                 trc += 1
             elif r < train_ratio + dev_ratio:
-                f_dev.write(line + "\n")
-                dc += 1
+                if dc >= args.max_test_lines:
+                    f_train.write(line + "\n")
+                    trc += 1
+                else:
+                    f_dev.write(line + "\n")
+                    dc += 1
             else:
-                f_test.write(line + "\n")
-                tc += 1
+                if tc >= args.max_test_lines:
+                    f_train.write(line + "\n")
+                    trc += 1
+                else:
+                    f_test.write(line + "\n")
+                    tc += 1
     logging.info(f"Train lines: {trc}, Dev lines: {dc}, Test lines: {tc}")
 
 

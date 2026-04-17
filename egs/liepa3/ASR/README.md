@@ -2,21 +2,55 @@
 
 ## Requirements
 
-- 50Gb free disk space required on the disk that hosts docker
+- 100Gb free space required on the disk that hosts docker
+- docker
 
-## Configure env
+## Configure docker env
 
-Create `Makefile.options` with variables
+Create `Makefile.docker.options` with variables
 ```make
 ## see https://hub.docker.com/r/k2fsa/icefall/tags that matches your system 
-base_docker_version?=torch2.4.1-cuda12.4  
-## path to corpus ddir
-corpus_dir?=/home/share/LIEPA3
+docker_base_version?=torch2.4.1-cuda12.4
+
+## path to LIEPA3 corpus dir
+docker_corpus_dir?=/home/share/LIEPA3
+
 ## path to temporary and experiments dir
-data_dir=/mnt/share/icefall/liepa3/exp1
+docker_data_dir=/mnt/share/icefall/liepa3/exp1
+
 ## current user id:gid
 docker_user?=1001:1001
 ```
+
+## Configure training option
+
+Create `Makefile.options` with variables
+```make
+## experments dir
+## docker_data_dir (from Makefile.docker.options) is mounted to data on docker instance 
+## model and results will be saved here
+exp_dir?=data/exp/v01
+
+## model params
+## see zipformer/train.py for more options and explanation
+model_params=--use-cr-ctc 1 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 
+
+## model training params
+## see zipformer/train.py for more options and explanation
+train_params=$(model_params) --ctc-loss-scale 0.1 --enable-spec-aug 0 --cr-loss-scale 0.02 --max-duration 400
+
+
+## decoding method
+## see zipformer/decode.py for more options
+decoding_method?=greedy_search
+
+## decoding params
+decode_params=$(model_params) --max-duration 400
+
+## export params
+export_params=$(model_params)
+```
+
 
 
 ## Training on docker
@@ -44,15 +78,54 @@ make -f Makefile.docker stop
 cd egs/liepa3/ASR
 
 ### prepare
-nohup ./prepare.sh > data/pr.log &
+nohup make prepare/liepa3 > data/pr.log &
 tail -f data/pr.log
 
 
 ### train
-nohup ./zipformer/train.py   --world-size 1  --num-epochs 30   --start-epoch 1   --use-fp16 1   --exp-dir data/exp/v01   --max-duration 1000 > data/tr.log &
+nohup make train > data/tr.log &
+tail -f data/tr.log
 
 ### decode
-./zipformer/decode.py  --epoch 30  --avg 15  --exp-dir data/exp/v01   --max-duration 1000 --decoding-method modified_beam_search  -beam-size 4 
+make decode/test
+```
+
+### to test with common voice test corpus
+
+```bash
+### prepare
+### before: manually download https://datacollective.mozillafoundation.org/datasets/cmj8u3pdo00f5nxxb9uuewruj
+### to data/downloads directory
+make prepare/common-voice
+
+### decode
+make decode/common-voice
+```
+
+### export model to onnx
+
+```bash
+## offline model
+make onnx/export
+
+## streaming model
+make onnx/export/streaming
+
+### decode
+make onnx/decode-wav wavs="<some wav files>"
+```
+
+### test onnx on sherpa
+
+Install shepa-onnx: `pip install sherpa-onnx`
+
+```bash
+## offline model test
+## sample on linux
+sherpa-onnx-alsa-offline --tokens=data/exp06/tokens.txt --zipformer-ctc-model=data/exp06/model.int8.onnx plughw:1,0
+
+## streaming model test
+sherpa-onnx-alsa --tokens=data/exp07/tokens.txt --zipformer2-ctc-model=data/exp07/ctc-epoch-30-avg-10-chunk-32-left-128.int8.onnx plughw:1,0
 
 ```
 

@@ -35,11 +35,16 @@ def main():
     cuts = CutSet.from_file(args.input)
 
     def normalize(s):
-        s.text = clean_text(s.text)
+        s.text, ok = clean_text(s.text)
+        if not ok:
+             logging.warning(f"{s.id} has invalid characters in text: {s.text}")
+             return None
         return s
 
     logging.info(f"normalize texts")
     cuts = cuts.map(normalize)
+
+    cuts = cuts.filter(lambda c: c is not None)
 
     logging.info(f"writing cuts to {args.output}")
     cuts.to_file(args.output)
