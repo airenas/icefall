@@ -62,20 +62,12 @@ def main():
 
     count = 0
 
-    with open(transcript_file, "r", encoding="utf-8-sig", newline="") as f:
-        total = sum(1 for line in tqdm(f, desc="Counting") if line.strip())
-
     with open(transcript_file, newline="", encoding="utf-8-sig") as csvfile:
-        reader = csv.reader(csvfile, delimiter="|")
-        for i, row in tqdm(enumerate(reader), desc="Processing cv file", total=total):
-            if not row or all(not col.strip() for col in row):
-                continue
-            if len(row) < 2:
-                logging.warning("Skipping malformed line (need >=2 columns): %s", row)
-                continue
-            audio_rel_path = Path(row[0].strip())
+        reader = csv.DictReader(csvfile)
+        for row in tqdm(reader, desc="Processing cv file"):
+            audio_rel_path = Path(row["Audio_file_path_title"])
             audio_path = corpus_dir / audio_rel_path
-            recording_id = f"{i}"
+            recording_id = row.get("Record_id")
             if not recording_id:
                 logging.warning(f"No Record_id {row}")
                 continue
@@ -83,11 +75,24 @@ def main():
                 logging.warning(f"file not found: {audio_path}")
                 continue
 
-            recording = Recording.from_file(audio_path, recording_id=recording_id)
-            duration = recording.duration
+            csv_duration = float(row["Duration_total"]) / 1000.0
 
-            speaker = audio_rel_path.parent.name
-            text, ok = clean_text(row[1].strip())
+            # Recording object (per utterance or per file, here per utterance)
+            recording = Recording.from_file(audio_path, recording_id=recording_id)
+            actual_duration = recording.duration
+            if abs(actual_duration - csv_duration) > 0.1:
+                logging.warning(
+                    "duration mismatch for %s: csv=%.3fs audio=%.3fs, skipping",
+                    audio_path,
+                    duration,
+                    actual_duration,
+                )
+                continue
+            duration = actual_duration
+
+            speaker = row["Speaker_id"]
+            start_sec = float(row["Utterance_start"]) / 1000.0  # CSV is in ms
+            text, ok = clean_text(row["Utterance_text"])
             if not ok:
                 logging.warning(
                     "Text contains invalid characters '%s'",
@@ -101,7 +106,7 @@ def main():
             supervision = SupervisionSegment(
                 id=recording_id,
                 recording_id=recording_id,
-                start=0.0,
+                start=start_sec,
                 duration=duration,
                 channel=0,
                 speaker=speaker,
@@ -122,7 +127,6 @@ def main():
     )
 
     cuts_path = output_dir / "cuts_all.jsonl.gz"
-    cuts = cuts.resample(16000)
     cuts.to_file(cuts_path)
     print(f"Written cuts to {cuts_path}")
 

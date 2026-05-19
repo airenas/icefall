@@ -6,6 +6,20 @@ from pathlib import Path
 
 from lhotse import CutSet
 
+
+def take(cuts, n, max_duration: int):
+    res = []
+    total_duration = 0
+    for cut in cuts:
+        res.append(cut) # make sure we add otherwise could be lost in the next iteration
+        total_duration += cut.duration
+        if 0 < max_duration <= total_duration:
+            break
+        if len(res) >= n:
+            break
+    return CutSet.from_cuts(res), total_duration
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -14,7 +28,14 @@ def main():
         help="""Manifest dir.
         """,
     )
+    parser.add_argument(
+        "--max-duration",
+        type=int,
+        default=36000,
+        help="Limit test/dev dataset to this many secs (0 = no limit)",
+    )
     args = parser.parse_args()
+    logging.info(f"Splitting data in {args.manifest_dir} with max_duration={args.max_duration}s")
 
     random.seed(42)
 
@@ -25,16 +46,16 @@ def main():
 
     n = len(cuts)
     logging.info(f"All {n}")
-    n_train = int(0.9 * n)
     n_dev = int(0.05 * n)
 
-    cuts_train = cuts.subset(first=n_train)
-    cuts_dev = cuts.subset(first=n_train + n_dev).subset(last=n_dev)
-    cuts_test = cuts.subset(last=n - n_train - n_dev)
+    ci = iter(cuts)
 
-    logging.info(f"Train cuts: {len(cuts_train)}")
-    logging.info(f"Dev   cuts: {len(cuts_dev)}")
-    logging.info(f"Test  cuts: {len(cuts_test)}")
+    cuts_dev, duration = take(ci, n_dev, args.max_duration)
+    logging.info(f"Dev   cuts: {len(cuts_dev)}. Duration: {duration/3600:.2f} hours")
+    cuts_test, duration = take(ci, n_dev, args.max_duration)
+    logging.info(f"Train  cuts: {len(cuts_test)}. Duration: {duration / 3600:.2f} hours")
+    cuts_train, duration = take(ci, n, 0)
+    logging.info(f"Train  cuts: {len(cuts_train)}. Duration: {duration / 3600:.2f} hours")
 
     cuts_train.to_file(manifest_path / "cuts_train.jsonl.gz")
     cuts_dev.to_file(manifest_path / "cuts_dev.jsonl.gz")
