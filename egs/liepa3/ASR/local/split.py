@@ -51,11 +51,11 @@ def main():
     ci = iter(cuts)
 
     cuts_dev, duration = take(ci, n_dev, args.max_duration)
-    logging.info(f"Dev   cuts: {len(cuts_dev)}. Duration: {duration/3600:.2f} hours")
+    logging.info(f"Dev cuts: {len(cuts_dev)}. Duration: {duration/3600:.2f} hours")
     cuts_test, duration = take(ci, n_dev, args.max_duration)
-    logging.info(f"Train  cuts: {len(cuts_test)}. Duration: {duration / 3600:.2f} hours")
+    logging.info(f"Test cuts: {len(cuts_test)}. Duration: {duration / 3600:.2f} hours")
     cuts_train, duration = take(ci, n, 0)
-    logging.info(f"Train  cuts: {len(cuts_train)}. Duration: {duration / 3600:.2f} hours")
+    logging.info(f"Train cuts: {len(cuts_train)}. Duration: {duration / 3600:.2f} hours")
 
     cuts_train.to_file(manifest_path / "cuts_train.jsonl.gz")
     cuts_dev.to_file(manifest_path / "cuts_dev.jsonl.gz")
