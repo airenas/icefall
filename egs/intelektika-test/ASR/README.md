@@ -2,7 +2,9 @@
 
 Zip former resultts for intelektika tests
 
-Models in [../../liepa3/ASR](../../liepa3/ASR/RESULTS.md)
+Models:  in [../../liepa3/ASR](../../liepa3/ASR/RESULTS.md) trained on 450h
+
+mL01: in [VietASR](https://github.com/airenas/VietASR/blob/d32f3f1d45dbcfdeb5ba0094573ccc94af5eca8b/Makefile#L184), trained on 10k hours
 
 
 | model/decoding method                      | ADAM  |  ARMN |   LRV1 |   SPEK |   TVR1 |   PRIV |   TEL1 |   TELs |   BABL |
@@ -14,5 +16,8 @@ Models in [../../liepa3/ASR](../../liepa3/ASR/RESULTS.md)
 |*with lm*|
 | m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  beam-size=12, --lm-scale 0.50 | 6.00 | 6.79 | 15.08 | 14.28 | 17.29 | 48.73 | | 22.44 | 53.39 |
 | m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore beam-size=12, --lm-scale 0.50  | 6.40 | 5.63 | 14.62 | 14.39 | 16.23 | 47.12 | | 20.62| 51.27 |
+||
+| mL01: zipformer (ctc) + greedy_search | 3.2 | 4.98 | 7.25 | 10.95 | 9.98 | 30.77 | | 14.22 | 37.6 |
+
 
 

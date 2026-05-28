@@ -5,7 +5,7 @@ log?=INFO
 
 exp_dir?=data/exp/v01
 vocab_size?=500
-lang_dir=$(data_dir)/lang_bpe_${vocab_size}
+lang_dir?=$(data_dir)/lang_bpe_${vocab_size}
 
 python_cmd=PYTHONPATH=./../../../ LOGLEVEL=$(log) python3
 decode_limit?=0
