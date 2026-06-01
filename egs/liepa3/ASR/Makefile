@@ -15,6 +15,7 @@ gpus?=1
 
 epoch?=30
 avg?=15
+export_version?=0.1
 
 ##############################################################
 download_dir?=data/download
@@ -100,6 +101,7 @@ onnx/export:
 		--use-averaged-model 1 \
 		--epoch $(epoch) \
 		--avg $(avg) \
+		--version $(export_version) \
 		$(export_params)
 onnx/export/streaming:
 	$(python_cmd) ./zipformer/export-onnx-streaming-ctc.py \
@@ -108,7 +110,8 @@ onnx/export/streaming:
 		--use-averaged-model 1 \
 		--epoch $(epoch) \
 		--avg $(avg) \
-		$(export_params)
+		--version $(export_version) \
+		 $(export_params)
 onnx/decode-wav:
 	$(python_cmd) ./zipformer/onnx_pretrained_ctc.py \
 		--nn-model $(exp_dir)/model.onnx \
