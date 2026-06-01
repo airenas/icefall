@@ -4,8 +4,10 @@
 
 | name       | corpus                            | sentences | words  |
 |------------|-----------------------------------|-----------|--------|
-| test       | LIEPA3 (5%) test set              | 12176     | 123021 |
+| test       | LIEPA3-450h (5%) test set         | 12176     | 123021 |
 | test-cv    | Common Voice (LT) test set v24.0  | 5517      | 35659  |
+| test-10k   | LIEPA3-10k (20h) test set         | 14468     | 139527 |
+
 
 ### zipformer
 
@@ -15,24 +17,25 @@
 
 ##### 
 
-| model/decoding method                      | test       | test-cv | comment   |
-|--------------------------------------|------------|---------|-----------|
-| m2: zipformer (ctc cr) + musan / greedy_search   | 1.86  |  6.97   |  |
+| model/decoding method                      | test       | test-cv | test-10k | comment   |
+|--------------------------------------|------------|---------|-|----------|
+| mL0: zipformer (ctc) / greedy_search   | 1.36  |  3.78   | 2.41 | epoch=10 avg=3
+| m2: zipformer (ctc cr) + musan / greedy_search   | 1.86  |  6.97   | 8.20 |
 | m1: zipformer (ctc cr) / modified_beam_search     | 1.90       | 6.48    |  |
 | m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    |  |
 | m1: zipformer (ctc cr) / fast_beam_search         | 1.91       | 6.42    |  |
 | m3: zipformer (ctc)  + musan / greedy_search     | 2.18       | 7.38  |  |
 | m4: zipformer (ctc)  / greedy_search     | 2.29       | 7.35  |  |
-| m0: zipformer / greedy_search            | 2.56       | 7.87    | --epoch 30 --avg 15 |
+| m0: zipformer / greedy_search            | 2.56       | 7.87    || --epoch 30 --avg 15 |
 |*with lm*|
-| m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
-| m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore   |   1.88  |  5.80   |  NBest rescore (rnnlm) beam-size=12, --lm-scale 0.50 |
-| m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.90  | 5.99   | NBest rescore (transformer partly trained) beam-size=4 --lm-scale 0.05 |
-| m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.98  | 5.75 | NBest rescore (transformer partly trained) beam-size=12 --lm-scale 0.05 |
+| m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 || NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
+| m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore   |   1.88  |  5.80   ||  NBest rescore (rnnlm) beam-size=12, --lm-scale 0.50 |
+| m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.90  | 5.99   || NBest rescore (transformer partly trained) beam-size=4 --lm-scale 0.05 |
+| m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.98  | 5.75 || NBest rescore (transformer partly trained) beam-size=12 --lm-scale 0.05 |
 |*oracle*|
-| m2: zipformer (ctc cr) + musan / fast_beam_search_nbest_oracle  | (0.63) |  (3.44)   | <- oracle beam-size=12 |
-| m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.38)  | <- oracle beam-size=4 |
-| m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.28)  | <- oracle beam-size=12 |
+| m2: zipformer (ctc cr) + musan / fast_beam_search_nbest_oracle  | (0.63) |  (3.44)   || <- oracle beam-size=12 |
+| m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.38)  || <- oracle beam-size=4 |
+| m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.28)  || <- oracle beam-size=12 |
 
 ##### m0
 
@@ -125,6 +128,18 @@ Number of model parameters: 148824074
 
 ###### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp08 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 800 --use-averaged-model 1 --beam-size 4 --test-cut data/exp03/fbank/cuts_test.jsonl.gz` 
+
+##### mL01
+
+Number of model parameters: 304442090
+
+###### Train params
+
+`./ASR/zipformer/train.py --world-size 6 --num-epochs 10 --start-epoch 0 --bpe-model train-asr/experiments/VietASR/lang_bpe_500/bpe.model --manifest-dir train-asr/experiments/VietASR/fbank-fixed --exp-dir train-asr/experiments/VietASR/exp/v01 --use-fp16 1 --train-cuts 4000h --max-duration 600 --enable-musan 0 --enable-spec-aug 1 --seed 1332 --master-port 12356 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --base-lr 0.045`
+
+###### Decode params
+
+`./ASR/zipformer/decode.py --epoch 10 --avg 3 --exp-dir experiments/VietASR/exp/v01 --max-duration 400 --bpe-model experiments/VietASR/lang_bpe_500/bpe.model --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --decoding-method greedy_search --manifest-dir experiments/VietASR/fbank --use-averaged-model 1 --cuts-name test`
 
 ### streaming models
 

@@ -4,7 +4,9 @@ Zip former resultts for intelektika tests
 
 Models:  in [../../liepa3/ASR](../../liepa3/ASR/RESULTS.md) trained on 450h
 
-mL01: in [VietASR](https://github.com/airenas/VietASR/blob/d32f3f1d45dbcfdeb5ba0094573ccc94af5eca8b/Makefile#L184), trained on 10k hours
+m1, m2, m3, ms3: trained on 450h
+
+mL01: trained on 10k h (10 epochs, 350k iterations)
 
 
 | model/decoding method                      | ADAM  |  ARMN |   LRV1 |   SPEK |   TVR1 |   PRIV |   TEL1 |   TELs |   BABL |
@@ -17,7 +19,4 @@ mL01: in [VietASR](https://github.com/airenas/VietASR/blob/d32f3f1d45dbcfdeb5ba0
 | m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  beam-size=12, --lm-scale 0.50 | 6.00 | 6.79 | 15.08 | 14.28 | 17.29 | 48.73 | | 22.44 | 53.39 |
 | m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore beam-size=12, --lm-scale 0.50  | 6.40 | 5.63 | 14.62 | 14.39 | 16.23 | 47.12 | | 20.62| 51.27 |
 ||
-| mL01: zipformer (ctc) + greedy_search | 3.2 | 4.98 | 7.25 | 10.95 | 9.98 | 30.77 | | 14.22 | 37.6 |
-
-
-
+| mL01: zipformer (ctc) + greedy_search  (trained on 10k) | 1.6 | 3.18 | 6.42 | 8.73 [722 / 8272, 75 ins, 103 del, 544 sub ] | 8.73 [1383 / 15849, 154 ins, 157 del, 1072 sub ] | 24.05 | | 12.01 | 31.42 |
