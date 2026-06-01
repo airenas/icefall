@@ -100,10 +100,6 @@ onnx/export:
 		--use-averaged-model 1 \
 		--epoch $(epoch) \
 		--avg $(avg) \
-		--query-head-dim 32 \
-		--value-head-dim 12 \
-		--decoder-dim 512 \
-		--joiner-dim 512 \
 		$(export_params)
 onnx/export/streaming:
 	$(python_cmd) ./zipformer/export-onnx-streaming-ctc.py \
@@ -112,10 +108,6 @@ onnx/export/streaming:
 		--use-averaged-model 1 \
 		--epoch $(epoch) \
 		--avg $(avg) \
-		--query-head-dim 32 \
-		--value-head-dim 12 \
-		--decoder-dim 512 \
-		--joiner-dim 512 \
 		$(export_params)
 onnx/decode-wav:
 	$(python_cmd) ./zipformer/onnx_pretrained_ctc.py \
