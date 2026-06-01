@@ -19,7 +19,7 @@
 
 | model/decoding method                      | test       | test-cv | test-10k | comment   |
 |--------------------------------------|------------|---------|-|----------|
-| mL0: zipformer (ctc) / greedy_search   | 1.36  |  3.78   | 2.41 | epoch=10 avg=3
+| [mL01](#ml01): zipformer (ctc) / greedy_search   | 1.36  |  3.78   | 2.41 | epoch=10 avg=3
 | m2: zipformer (ctc cr) + musan / greedy_search   | 1.86  |  6.97   | 8.20 |
 | m1: zipformer (ctc cr) / modified_beam_search     | 1.90       | 6.48    |  |
 | m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    |  |
