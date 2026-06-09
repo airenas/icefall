@@ -146,9 +146,9 @@ Number of model parameters: 304442090
 #### results 
 
 | model/decoding method                      | test       | test-cv | test-10k | comment    |
-|--------------------------------------|------------|---------|---------------------|
-| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  5.31 |  5.09 | --chunk-size 64 --left-context-frames 256 --epoch 10 --avg 2 |
-| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  4.73 |  5.38 | --chunk-size 32 --left-context-frames 128 --epoch 10 --avg 2 |
+|--------------------------------------|-|-|-|-|
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  4.73 |  5.09 | --chunk-size 64 --left-context-frames 256 --epoch 10 --avg 2 |
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  5.31 |  5.38 | --chunk-size 32 --left-context-frames 128 --epoch 10 --avg 2 |
 | [msLs01](#msls01): zipformer (ctc) /greedy_search |       | ??    || --chunk-size 64 --left-context-frames 256 --epoch 15 --avg 2 |
 | [msLs01](#msls01): zipformer (ctc) /greedy_search |       | ??    || --chunk-size 32 --left-context-frames 128 --epoch 15 --avg 2 |
 | ms3: zipformer (ctc) + musan /greedy_search       | 3.81  | 10.26 || --chunk-size 32 --left-context-frames 128 |
@@ -208,6 +208,7 @@ Number of model parameters: 66367431
 #### msL01
 
 Number of model parameters: 305725162
+
 Trained on 10k
 
 ##### Train params
@@ -220,6 +221,7 @@ Trained on 10k
 #### msLs01
 
 Number of model parameters: 66367431
+
 Trained on 10k
 
 ##### Train params
