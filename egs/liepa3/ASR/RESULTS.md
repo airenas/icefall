@@ -147,14 +147,18 @@ Number of model parameters: 304442090
 
 | model/decoding method                      | test       | test-cv | comment    |
 |--------------------------------------|------------|---------|---------------------|
-| ms3: zipformer (ctc) + musan /greedy_search         | 3.81  | 10.26   | --chunk-size 32 --left-context-frames 128 |
-| ms3: zipformer (ctc) + musan /greedy_search         | 3.43  |  9.54   | --chunk-size 64 --left-context-frames 256 |
-| ms3: zipformer (ctc) + musan /greedy_search         | 3.14  |  8.83   | --chunk-size 128 --left-context-frames 256 |
-| ms4: zipformer (ctc) /greedy_search                 | 3.89  | 10.57   | --chunk-size 32 --left-context-frames 128 |
-| ms2: zipformer + musan /greedy_search  | 3.98       | 10.98   |  |
-| ms1: zipformer/greedy_search                        | 6.39    | 15.46 |  |
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  5.31 | --chunk-size 64 --left-context-frames 256 --epoch 10 --avg 2 |
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  4.73 | --chunk-size 32 --left-context-frames 128 --epoch 10 --avg 2 |
+| [msLs01](#msls01): zipformer (ctc) /greedy_search |       | ??    | --chunk-size 64 --left-context-frames 256 --epoch 15 --avg 2 |
+| [msLs01](#msls01): zipformer (ctc) /greedy_search |       | ??    | --chunk-size 32 --left-context-frames 128 --epoch 15 --avg 2 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.81  | 10.26 | --chunk-size 32 --left-context-frames 128 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.43  |  9.54 | --chunk-size 64 --left-context-frames 256 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.14  |  8.83 | --chunk-size 128 --left-context-frames 256 |
+| ms4: zipformer (ctc) /greedy_search               | 3.89  | 10.57 | --chunk-size 32 --left-context-frames 128 |
+| ms2: zipformer + musan /greedy_search             | 3.98  | 10.98 |  |
+| ms1: zipformer/greedy_search                      | 6.39  | 15.46 |  |
 | *lm rescore* |
-| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore        | 3.15  | 7.92   | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50  --chunk-size 32 --left-context-frames 128|
+| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore  | 3.15 | 7.92   | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50  --chunk-size 32 --left-context-frames 128|
 
 #### ms1: zipformer streaming
 ##### Train params
@@ -200,3 +204,27 @@ Number of model parameters: 66367431
 
 ##### Decode params
 `./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp03/exp09 --bpe-model data/exp03/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --causal 1 --use-cr-ctc 0 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --max-duration 800 --use-averaged-model 1 --chunk-size 32 --left-context-frames 128`
+
+#### msL01
+
+Number of model parameters: 305725162
+Trained on 10k
+
+##### Train params
+
+`./ASR/zipformer/train.py --world-size 6 --num-epochs 10 --start-epoch 1 --bpe-model /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/lang_bpe_500/bpe.model --manifest-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/fbank-fixed --exp-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/exp/v01rt --use-fp16 1 --train-cuts 4000h --max-duration 600 --enable-musan 0 --enable-spec-aug 1 --seed 1332 --master-port 12356 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --causal 1 --base-lr 0.045`
+
+##### Decode params
+`./zipformer/decode.py  --epoch 10  --avg 2 --exp-dir /mnt/42T/experiments/VietASR/exp/v01rt --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --query-head-dim 32 --causal 1 --value-head-dim 12 --decoder-dim 512 --joiner-dim 512 --max-duration 350 --chunk-size 32 --left-context-frames 128 --test-cut /mnt/42T/experiments/VietASR/fbank/cuts_common-voice.jsonl.gz`
+
+#### msLs01
+
+Number of model parameters: 66367431
+Trained on 10k
+
+##### Train params
+
+`./ASR/zipformer/train.py --world-size 4 --num-epochs 15 --start-epoch 1 --manifest-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/fbank-fixed --exp-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/exp/v01rts --use-fp16 1 --train-cuts 4000h --max-duration 1000 --enable-musan 0 --enable-spec-aug 1 --seed 1332 --master-port 12356 --num-encoder-layers 2,2,3,4,3,2 --feedforward-dim 512,768,1024,1536,1024,768 --encoder-dim 192,256,384,512,384,256 --encoder-unmasked-dim 192,192,256,256,256,192 --use-ctc 1 --use-transducer 1 --causal 1 --bpe-model /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/lang_bpe_500/bpe.model --base-lr 0.045`
+
+##### Decode params
+`./zipformer/decode.py --epoch 15 --avg 2  --exp-dir /mnt/42T/experiments/VietASR/exp/v01rts --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --num-encoder-layers 2,2,3,4,3,2 --feedforward-dim 512,768,1024,1536,1024,768 --encoder-dim 192,256,384,512,384,256 --encoder-unmasked-dim 192,192,256,256,256,192 --use-ctc 1 --use-transducer 1 --causal 1 --max-duration 350 --chunk-size 32 --left-context-frames 128 --test-cut /mnt/42T/experiments/VietASR/fbank/cuts_common-voice.jsonl.gz`
