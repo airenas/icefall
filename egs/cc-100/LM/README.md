@@ -10,6 +10,8 @@ From: https://k2-fsa.github.io/icefall/recipes/RNN-LM/librispeech/lm-training.ht
 
 ### Stats
 
+#### cc-100
+
 Words: 1289M
 Sentences: 130M
 
@@ -24,6 +26,9 @@ Sentences: 130M
 Prepare Makefile.options. Example:
 
 ```Makefile
+corpus=cc-100 # or corpus=lt_ai_blkt
+
+
 ## datasets preparation dir
 data_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm
 
@@ -35,6 +40,10 @@ exp_dir?=/workspace/icefall/egs/liepa3/ASR/data/lm/transformer/v01
 
 ## bpe model 
 bpe_model=/workspace/icefall/egs/liepa3/ASR/data/lang_bpe_500/bpe.model
+
+## lt_ai_blkt sentences parquet files dir
+lt_ai_blkt_sentences_dir?=/home/airenas/Edge-Punct-Casing/egs/lt_ai_blkt/corpus/sentences
+
 ```
 
 ### CC-100 data preparation
@@ -57,6 +66,18 @@ make -f Makefile.docker run
 ```bash
 cd cc-100/LM
 make prepare/cc-100 prepare
+```
+
+### lt_ai_blkt data preparation
+
+Corpus must be split into sentences.
+Example: https://github.com/airenas/Edge-Punct-Casing/blob/35b0458696a7a13788cc95bf38e45a26ece2c54b/egs/lt_ai_blkt/Makefile#L45
+
+#### On docker container
+
+```bash
+cd cc-100/LM
+make prepare/lt_ai_blkt
 ```
 
 
