@@ -11,10 +11,28 @@ lex_port?=8080
 splitter_url?=http://host.docker.internal:$(lex_port)
 limit?=10000000000
 gpus?=1
+corpus?=cc-100
+# corpus?=lt_ai_blkt
+lt_ai_blkt_sentences_dir?=$(data_dir)/lt_ai_blkt/sentences
 
 batch_size?=50
 ###################################################################
-$(data_dir):
+info:
+	@echo "data_dir: $(data_dir)"
+	@echo "url: $(url)"
+	@echo "lex_port: $(lex_port)"
+	@echo "splitter_url: $(splitter_url)"
+	@echo "limit: $(limit)"
+	@echo "gpus: $(gpus)"
+	@echo "corpus: $(corpus)"
+	@echo "lt_ai_blkt_sentences_dir: $(lt_ai_blkt_sentences_dir)"
+	@echo "batch_size: $(batch_size)"
+	@echo "bpe_model: $(bpe_model)"
+.PHONY: info
+###################################################################
+#### cc-100
+###################################################################
+$(data_dir) $(data_dir)/$(corpus):
 	mkdir -p $@
 
 $(data_dir)/.dwn: | $(data_dir)
@@ -26,21 +44,32 @@ $(data_dir)/lt.txt: $(data_dir)/.dwn
 $(data_dir)/lt.ready.txt: $(data_dir)/lt.txt
 	head -n $(limit) $(data_dir)/lt.txt > $@_
 	mv $@_ $@	
-
-$(data_dir)/lt.sentences.txt: $(data_dir)/lt.ready.txt
+$(data_dir)/cc-100/lt.sentences.txt: $(data_dir)/lt.ready.txt | $(data_dir)/cc-100
 	$(python_cmd) ./local/to_sentences.py --input $< --output $@_ --splitter-url $(splitter_url) \
 		--continue-if-exists
+	mv $@_ $@
+###################################################################
+#### lt_ai_blkt
+###################################################################
+$(lt_ai_blkt_sentences_dir): 
+	@echo "Please put the lt_ai_blkt sentences parquet files into $(lt_ai_blkt_sentences_dir)/*"
+	@exit 1
+
+$(data_dir)/lt_ai_blkt/lt.sentences.txt: $(lt_ai_blkt_sentences_dir) | $(data_dir)/lt_ai_blkt
+	$(python_cmd) ./local/to_sentences_from_parquet.py --input $< --output $@_ --limit $(limit)
 	mv $@_ $@
 ###################################################################
 ### lex docker must be started on host
 start/lex:
 	docker run --rm -it -p $(lex_port):8080 --log-driver=none --name lex semantikadocker.vdu.lt/lex:2021.04.02
 ###################################################################
-prepare/cc-100: $(data_dir)/lt.sentences.txt
+prepare/cc-100: $(data_dir)/cc-100/lt.sentences.txt
 .PHONY: prepare/cc-100
+prepare/lt_ai_blkt: $(data_dir)/lt_ai_blkt/lt.sentences.txt
+.PHONY: prepare/lt_ai_blkt
 ###################################################################
-$(data_dir)/lt.clean.txt: # $(data_dir)/lt.sentences.txt	
-	$(python_cmd) ./local/clean.py --input $(data_dir)/lt.sentences.txt --output $@ 
+$(data_dir)/lt.clean.txt: $(data_dir)/$(corpus)/lt.sentences.txt	
+	$(python_cmd) ./local/clean.py --input $(data_dir)/$(corpus)/lt.sentences.txt --output $@ 
 
 ## split $(data_dir)/lt.clean.txt into train/dev/test 90/5/5
 $(data_dir)/lt.train.txt $(data_dir)/lt.dev.txt $(data_dir)/lt.test.txt: $(data_dir)/lt.clean.txt	
