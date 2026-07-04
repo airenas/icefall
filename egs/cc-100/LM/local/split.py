@@ -30,13 +30,24 @@ def main():
         """,
     )
     parser.add_argument(
+        "--max-train-words",
+        type=int,
+        default=2000000000,
+        help="""Maximum number of words for the training set. limit to fit into int32.
+        """,
+    )
+    parser.add_argument(
         "--output-template",
         type=str,
         help="""Output template, should contain `{}` as a placeholder for split name.
             """,
     )
     args = parser.parse_args()
-
+    logging.info(f"Input: {args.input}")
+    logging.info(f"Max test lines: {args.max_test_lines}")
+    logging.info(f"Max train words: {args.max_train_words}")
+    logging.info(f"Output template: {args.output_template}")
+    
     random.seed(42)
 
     total_lines = count_lines(args.input)
@@ -50,7 +61,8 @@ def main():
     train_ratio = 0.9
     dev_ratio = 0.05
 
-    trc, dc, tc = 0, 0, 0
+    trc, dc, tc, skip = 0, 0, 0, 0
+    trw = 0
 
     with open(args.input, "r", encoding="utf-8") as fin, \
             open(train_f, "w", encoding="utf-8") as f_train, \
@@ -62,25 +74,38 @@ def main():
             if not line:
                 continue
 
+            wc = len(line.split())
             r = random.random()
             if r < train_ratio:
-                f_train.write(line + "\n")
-                trc += 1
-            elif r < train_ratio + dev_ratio:
-                if dc >= args.max_test_lines:
+                if trw + wc < args.max_train_words:
                     f_train.write(line + "\n")
                     trc += 1
+                    trw += wc
+                else:
+                    skip += 1    
+            elif r < train_ratio + dev_ratio:
+                if dc >= args.max_test_lines:
+                    if trw + wc < args.max_train_words:
+                        f_train.write(line + "\n")
+                        trc += 1
+                        trw += wc
+                    else:
+                        skip += 1    
                 else:
                     f_dev.write(line + "\n")
                     dc += 1
             else:
                 if tc >= args.max_test_lines:
-                    f_train.write(line + "\n")
-                    trc += 1
+                    if trw + wc < args.max_train_words:
+                        f_train.write(line + "\n")
+                        trc += 1
+                        trw += wc
+                    else:
+                        skip += 1    
                 else:
                     f_test.write(line + "\n")
                     tc += 1
-    logging.info(f"Train lines: {trc}, Dev lines: {dc}, Test lines: {tc}")
+    logging.info(f"Train lines: {trc}, Dev lines: {dc}, Test lines: {tc}, Skipped lines: {skip} (prevent int32 overflow)")
 
 
 if __name__ == "__main__":
