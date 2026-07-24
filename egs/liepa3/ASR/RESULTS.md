@@ -168,18 +168,18 @@ Number of model parameters: 304442090
 
 | model/decoding method                      | test       | test-cv | test-10k | comment    |
 |--------------------------------------|-|-|-|-|
-| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  4.73 |  5.09 (3392 insertions, 480 deletions, 3233 substitutions, over 139527 reference words) | --chunk-size 64 --left-context-frames 256 --epoch 10 --avg 2 |
-| [msL01](#msl01): zipformer (ctc) /greedy_search   |  1.88 |  5.31 |  5.38 | --chunk-size 32 --left-context-frames 128 --epoch 10 --avg 2 |
-| [msLs01](#msls01): zipformer (ctc) /greedy_search |       |  5.02 |  3.82 (1401 insertions, 529 deletions, 3394 substitutions, over 139527 reference words) | --chunk-size 64 --left-context-frames 256 --epoch 15 --avg 2 |
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |       |  **4.73** |  5.09 (3392 insertions, 480 deletions, 3233 substitutions, over 139527 reference words) | --chunk-size 64 --left-context-frames 256 --epoch 10 --avg 2 |
+| [msL01](#msl01): zipformer (ctc) /greedy_search   |  **1.88** |  5.31 |  5.38 | --chunk-size 32 --left-context-frames 128 --epoch 10 --avg 2 |
+| [msLs01](#msls01): zipformer (ctc) /greedy_search |       |  5.02 |  **3.82** (1401 insertions, 529 deletions, 3394 substitutions, over 139527 reference words) | --chunk-size 64 --left-context-frames 256 --epoch 15 --avg 2 |
 | [msLs01](#msls01): zipformer (ctc) /greedy_search |  1.99 |  5.67 |  4.10 | --chunk-size 32 --left-context-frames 128 --epoch 15 --avg 2 |
-| ms3: zipformer (ctc) + musan /greedy_search       | 3.81  | 10.26 || --chunk-size 32 --left-context-frames 128 |
-| ms3: zipformer (ctc) + musan /greedy_search       | 3.43  |  9.54 || --chunk-size 64 --left-context-frames 256 |
-| ms3: zipformer (ctc) + musan /greedy_search       | 3.14  |  8.83 || --chunk-size 128 --left-context-frames 256 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.81  | 10.26 | 11.81 | --chunk-size 32 --left-context-frames 128 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.43  |  9.54 | 10.83 | --chunk-size 64 --left-context-frames 256 |
+| ms3: zipformer (ctc) + musan /greedy_search       | 3.14  |  8.83 | 10.21 | --chunk-size 128 --left-context-frames 256 |
 | ms4: zipformer (ctc) /greedy_search               | 3.89  | 10.57 || --chunk-size 32 --left-context-frames 128 |
 | ms2: zipformer + musan /greedy_search             | 3.98  | 10.98 ||  |
 | ms1: zipformer/greedy_search                      | 6.39  | 15.46 ||  |
 | *lm rescore* |
-| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore  | 3.15 | 7.92   || NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50  --chunk-size 32 --left-context-frames 128|
+| ms3+lm2: zipformer (ctc) + musan / nbest rnnlm rescore  | 3.15 | 7.92 | 10.31 | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50  --chunk-size 32 --left-context-frames 128|
 
 #### ms1: zipformer streaming
 ##### Train params
