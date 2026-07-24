@@ -22,7 +22,7 @@
 | [mL01](#ml01): zipformer (ctc) / greedy_search   | **1.36**  |  **3.78**   | **2.41** | epoch=10 avg=3
 | m2: zipformer (ctc cr) + musan / greedy_search   | 1.86  |  6.97   | 8.20 |
 | m1: zipformer (ctc cr) / modified_beam_search     | 1.90       | 6.48    |  |
-| m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    |  |
+| m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    | 8.34 |
 | m1: zipformer (ctc cr) / fast_beam_search         | 1.91       | 6.42    |  |
 | m3: zipformer (ctc)  + musan / greedy_search     | 2.18       | 7.38  |  |
 | m4: zipformer (ctc)  / greedy_search     | 2.29       | 7.35  |  |
@@ -30,7 +30,7 @@
 |*with lm*|
 | [mL01](#ml01)+[l3](#l3): zipformer (ctc) / modified_beam_search + nbest rnnlm rescore  | 1.40 | **3.25** | 2.95 | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.50 |
 | [mL01](#ml01)+[l3](#l3): zipformer (ctc) / modified_beam_search + nbest rnnlm rescore  | **1.35** | 3.76 | **2.37** | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.01 |
-| m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 || NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
+| m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 | 7.62 | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
 | m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore   |   1.88  |  5.80   ||  NBest rescore (rnnlm) beam-size=12, --lm-scale 0.50 |
 | m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.90  | 5.99   || NBest rescore (transformer partly trained) beam-size=4 --lm-scale 0.05 |
 | m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.98  | 5.75 || NBest rescore (transformer partly trained) beam-size=12 --lm-scale 0.05 |
@@ -102,7 +102,7 @@ Trained for 4epoch (1.5 weeks)
 
 ###### Decode params
 ```bash
-./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp02/exp/v02 --bpe-model data/exp02/lang_bpe_500/bpe.model --decoding-method modified_beam_search_lm_rescore 	--decode-limit 0 --use-cr-ctc 1 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 300 --use-averaged-model 1 --beam-size 12 --use-shallow-fusion 0 --lm-type rnn --lm-exp-dir data/exp02/lm/rnn/v01 --lm-epoch 4 --lm-avg 1 --lm-scale 0.5 --test-cut data/exp02/fbank/cuts_common-voice.jsonl.gz
+./zipformer/decode.py  --epoch 30  --avg 10  --exp-dir data/exp02/exp/v02 --bpe-model data/exp02/lang_bpe_500/bpe.model --decoding-method modified_beam_search_lm_rescore 	--decode-limit 0 --use-cr-ctc 1 --use-ctc 1 --use-transducer 1 --use-attention-decoder 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 512,768,1536,2048,1536,768 --encoder-dim 192,256,512,768,512,256 --encoder-unmasked-dim 192,192,256,320,256,192 --max-duration 300 --use-averaged-model 1 --beam-size 12 --use-shallow-fusion 0 --lm-type rnn --lm-exp-dir data/exp02/lm/rnn/v01 --lm-epoch 4 --lm-avg 1 --lm-scale 0.5 --test-cut <>
 ```
 
 ##### m2
