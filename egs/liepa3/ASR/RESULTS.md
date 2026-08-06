@@ -19,7 +19,8 @@
 
 | model/decoding method                      | test       | test-cv | test-10k | comment   |
 |--------------------------------------|------------|---------|-|----------|
-| [mL01](#ml01): zipformer (ctc) / greedy_search   | **1.36**  |  **3.78**   | **2.41** | epoch=10 avg=3
+| [mL01](#ml01): zipformer (ctc) / greedy_search   | **1.36**  |  3.78   | **2.41** | epoch=10 avg=3
+| [mLF01](#mlf01): zipformer (hubert encoder, ctc, ssl + finetune) / greedy_search   | 1.44  |  **3.44**   | 2.44 | epoch=3 avg=1
 | m2: zipformer (ctc cr) + musan / greedy_search   | 1.86  |  6.97   | 8.20 |
 | m1: zipformer (ctc cr) / modified_beam_search     | 1.90       | 6.48    |  |
 | m1: zipformer (ctc cr) / greedy_search            | 1.91       | 6.43    | 8.34 |
@@ -28,8 +29,9 @@
 | m4: zipformer (ctc)  / greedy_search     | 2.29       | 7.35  |  |
 | m0: zipformer / greedy_search            | 2.56       | 7.87    || --epoch 30 --avg 15 |
 |*with lm*|
-| [mL01](#ml01)+[l3](#l3): zipformer (ctc) / modified_beam_search + nbest rnnlm rescore  | 1.40 | **3.25** | 2.95 | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.50 |
+| [mL01](#ml01)+[l3](#l3): zipformer (ctc) / modified_beam_search + nbest rnnlm rescore  | 1.40 | 3.25 | 2.95 | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.50 |
 | [mL01](#ml01)+[l3](#l3): zipformer (ctc) / modified_beam_search + nbest rnnlm rescore  | **1.35** | 3.76 | **2.37** | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.01 |
+| [mLF01](#mlf01)+[l3](#l3): zipformer (hubert encoder, ctc, ssl + finetune) / modified_beam_search + nbest rnnlm rescore  | 1.53 | **2.98** | 3.20  | NBest rescore (rnnlm) beam-size=12 --lm-scale=0.50 |
 | m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  | 1.86 | 5.34 | 7.62 | NBest rescore (rnnlm) beam-size=12 --lm-scale 0.50 |
 | m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore   |   1.88  |  5.80   ||  NBest rescore (rnnlm) beam-size=12, --lm-scale 0.50 |
 | m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.90  | 5.99   || NBest rescore (transformer partly trained) beam-size=4 --lm-scale 0.05 |
@@ -162,6 +164,45 @@ Number of model parameters: 304442090
 ./zipformer/decode.py  --epoch 10  --avg 3  --exp-dir /mnt/42T/experiments/VietASR/exp/v01 --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --decoding-method modified_beam_search_lm_rescore --decode-limit 0 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --query-head-dim 32 --value-head-dim 12 --decoder-dim 512 --joiner-dim 512 --max-duration 350 --use-averaged-model 1 --use-shallow-fusion 0 --lm-type rnn --lm-exp-dir /mnt/42T/experiments/VietASR/lm/rnn-01 --lm-epoch 4 --lm-avg 2 --beam-size=12 --lm-scale 0.5 --test-cut <>
 ```
 
+##### mLF01
+
+Number of model parameters: 304959282
+
+Scripts: https://github.com/airenas/VietASR
+
+###### Train params
+
+SSL:
+gpus: 14 (V100 32GB), trained: 24 epochs, corpus: LIEPA3 + other (media, youtube, etc) + augmentation, total is about 80k hours. 
+
+
+```bash
+./SSL/zipformer_fbank/pretrain.py --use-multi-node 1 --world-size 14 --num-epochs 30 --start-epoch 0 --use-fp16 1 --label-type kmeans --label-rate 50 --sample-rate 100 --exp-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/exp/pretrain_v01 --train-cut large --accum-grad 1 --min-keep-size 200 --mask-before-cnn 1 --max-sample-size 1562 --mask-prob 0.80 --dropout-input 0.1 --dropout-features 0.1 --use-fp16 1 --max-duration 1000 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --base-lr 0.02 --warmup-start 0.1 --save-every-n 15000 --master-port 12356 --manifest-dir /scratch/lustre/home/hpc_airenas/train-asr/experiments/VietASR/fbank-fixed --manifest-prefix cuts_pretrain_
+```
+Finetune:
+gpus: 3 (RTX 4000 Ada 20GB), trained: 3 epochs, corpus: 10k LIEPA3.
+
+```bash
+./SSL/zipformer_fbank/finetune.py --world-size 3 --num-epochs 3 --start-epoch 0 --sample-rate 100  --manifest-dir /mnt/42T/experiments/VietASR/fbank --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --exp-dir /mnt/42T/experiments/VietASR/exp/finetune_v01 --pretrained-checkpoint-path /mnt/42T/experiments/VietASR/exp/pretrain_v01/epoch-24.pt --final-downsample 1 --causal 0 --save-every-n 4000 --seed 1556 --use-fp16 1 --max-duration 300 --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --base-lr 0.002 --enable-musan 0 --enable-spec-aug 1 --mask-before-cnn 1 --mask-prob 0.65 --mask-channel-prob 0.5 --mask-channel-length 20 --accum-grad 1 --phase-ratio "(0.1, 0.4, 0.5)" --max-lr-update 80000
+```
+
+###### Decode params
+
+```bash
+./SSL/zipformer_fbank/decode.py --epoch 3 --avg 1 --use-averaged-model 1 --exp-dir /mnt/42T/experiments/VietASR/exp/finetune_v01 --manifest-dir /mnt/42T/experiments/VietASR/fbank --max-duration 400 --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --final-downsample 1 --decoding-method greedy_search --cuts-name <>
+```
+
+
+
+##### mLF01+l3
+
+###### Decode params
+```bash
+./SSL/zipformer_fbank/decode.py --epoch 3 --avg 1 --use-averaged-model 1 --exp-dir /mnt/42T/experiments/VietASR/exp/finetune_v01 --manifest-dir /mnt/42T/experiments/VietASR/fbank --max-duration 400 --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --num-encoder-layers 2,2,4,5,4,2 --feedforward-dim 768,1536,2048,3072,2048,1536 --encoder-dim 256,512,768,1024,768,512 --encoder-unmasked-dim 256,256,256,320,256,256 --use-ctc 1 --use-transducer 1 --final-downsample 1 --decoding-method modified_beam_search_lm_rescore --lm-type rnn --lm-exp-dir /mnt/42T/experiments/VietASR/lm/rnn-01 --lm-epoch 4 --lm-avg 1 --beam-size=12 --lm-scale 0.5 --cuts-name <>
+```
+
+
+
 ### streaming models
 
 #### results 
@@ -251,3 +292,5 @@ Trained on 10k
 
 ##### Decode params
 `./zipformer/decode.py --epoch 15 --avg 2  --exp-dir /mnt/42T/experiments/VietASR/exp/v01rts --bpe-model /mnt/42T/experiments/VietASR/lang_bpe_500/bpe.model --decoding-method greedy_search --decode-limit 0 --num-encoder-layers 2,2,3,4,3,2 --feedforward-dim 512,768,1024,1536,1024,768 --encoder-dim 192,256,384,512,384,256 --encoder-unmasked-dim 192,192,256,256,256,192 --use-ctc 1 --use-transducer 1 --causal 1 --max-duration 350 --chunk-size 32 --left-context-frames 128 --test-cut /mnt/42T/experiments/VietASR/fbank/cuts_common-voice.jsonl.gz`
+
+
