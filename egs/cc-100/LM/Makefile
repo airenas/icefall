@@ -125,6 +125,16 @@ train/transformer: $(exp_dir)/.transformer.done
 .PHONY: train/transformer
 train/rnn: $(exp_dir)/.rnn.done
 .PHONY: train/rnn
+export/rnn:
+	$(python_cmd) ../../../icefall/rnn_lm/export-onnx.py \
+    --exp-dir $(exp_dir) \
+    --epoch 4 \
+    --avg 1 \
+    --tie-weights 1 \
+    --embedding-dim 2048 \
+    --hidden-dim 2048 \
+    --num-layers 3
+.PHONY: export/rnn    
 ###################################################################
 perplexity/rnn: 
 	$(python_cmd) ../../../icefall/rnn_lm/compute_perplexity.py \
