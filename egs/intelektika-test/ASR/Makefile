@@ -87,14 +87,14 @@ $(data_dir)/recognized/cuts_%.jsonl.gz: $(data_dir)/fbank-chunks/cuts_%.jsonl.gz
 rec/adam: $(data_dir)/recognized/cuts_adam.jsonl.gz
 .PHONY: rec/adam
 ##############################################################
-decode_cmd?=$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py --decode-limit $(decode_limit) --num-buckets=2
+decode_cmd?=$(python_cmd) ./../../liepa3/ASR/zipformer/decode.py --decode-limit $(decode_limit)
 $(data_dir)/results/.%.done.$(decoding_method): $(data_dir)/fbank/cuts_%.jsonl.gz | $(data_dir)/results
 	$(decode_cmd) --epoch $(epoch)  --avg $(avg)  \
 		--exp-dir $(exp_dir) --bpe-model $(lang_dir)/bpe.model \
 		--decoding-method $(decoding_method) \
 		$(decode_params) \
 		$(lm_params) \
-		--test-cut $<
+		--num-buckets=2 --test-cut $<
 	touch $@	
 ##############################################################
 $(data_dir)/merged/cuts_%.jsonl.gz: $(data_dir)/recognized/cuts_%.jsonl.gz  | $(data_dir)/merged
