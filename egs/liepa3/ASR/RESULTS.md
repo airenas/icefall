@@ -37,6 +37,8 @@
 | m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.90  | 5.99   || NBest rescore (transformer partly trained) beam-size=4 --lm-scale 0.05 |
 | m1+l1: zipformer (ctc cr) / modified_beam_search + nbest transformer rescore  | 1.98  | 5.75 || NBest rescore (transformer partly trained) beam-size=12 --lm-scale 0.05 |
 |*oracle*|
+| [mL01](#ml01): zipformer (hubert encoder, ctc, ssl + finetune) / fast_beam_search_nbest_oracle  | (0.66) | (1.61) | (0.73) | <- oracle beam-size=4  |
+| [mLF01](#mlf01): zipformer (hubert encoder, ctc, ssl + finetune) / fast_beam_search_nbest_oracle  | (0.70) | (1.46) | (0.82) | <- oracle beam-size=4  |
 | m2: zipformer (ctc cr) + musan / fast_beam_search_nbest_oracle  | (0.63) |  (3.44)   || <- oracle beam-size=12 |
 | m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.38)  || <- oracle beam-size=4 |
 | m1: zipformer (ctc cr) / fast_beam_search_nbest_oracle | (0.63)     | (3.28)  || <- oracle beam-size=12 |
