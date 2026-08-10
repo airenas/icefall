@@ -28,5 +28,5 @@ mLF01: SSL 80h, finetune on 10k h (ssl 24 epoch, finetune 3 epochs)
 | m1+l2: zipformer (ctc cr) / modified_beam_search + nbest rnnlm rescore  beam-size=12, --lm-scale 0.50 | 6.00 | 6.79 | 15.08 | 14.28 | 17.29 | 48.73 | | 22.44 | 53.39 |
 | m2+l2: zipformer (ctc cr) + musan/ modified_beam_search + nbest rnnlm rescore beam-size=12, --lm-scale 0.50  | 6.40 | 5.63 | 14.62 | 14.39 | 16.23 | 47.12 | | 20.62| 51.27 |
 |*oracle*|
-| mLF01: zipformer (hubert encoder, ctc, ssl + finetune) / fast_beam_search_nbest_oracle | (6.8) | very long sentences | (0.53) | (2.59) | (3.66) | (3.33) | (13.86) | | (5.12) | (20.31)| epoch-3-avg-1-beam-20.0-max-contexts-8-max-states-64 | 
+| mLF01: zipformer (hubert encoder, ctc, ssl + finetune) / fast_beam_search_nbest_oracle | (6.8) / very long sentences | (0.53) | (2.59) | (3.66) | (3.33) | (13.86) | | (5.12) | (20.31)| epoch-3-avg-1-beam-20.0-max-contexts-8-max-states-64 | 
 | mL01: zipformer (hubert encoder, ctc, ssl + finetune) / fast_beam_search_nbest_oracle | (5.20) | (0.71) | (2.82) | (4.10) | (3.71) | (17.34) | | (6.44) | (26.43) | epoch-3-avg-1-beam-20.0-max-contexts-8-max-states-64 |
