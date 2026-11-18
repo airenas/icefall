@@ -222,6 +222,12 @@ def get_parser():
         --method is greedy_search.
         """,
     )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="",
+        help="""The output file to write the transcription results.""",
+    )
 
     add_model_arguments(parser)
 
@@ -383,9 +389,13 @@ def main():
     else:
         raise ValueError(f"Unsupported method: {params.method}")
 
-    s = "\n"
+    s = ""
     for filename, hyp in zip(params.sound_files, hyps):
-        s += f"{filename}:\n{hyp}\n\n"
+        s += f"{filename}\t{hyp}\n"
+    if params.output:
+        logging.info(f"Writing output to {params.output}")
+        with open(params.output, "w", encoding="utf-8") as f:
+            f.write(s)
     logging.info(s)
 
     logging.info("Decoding Done")
