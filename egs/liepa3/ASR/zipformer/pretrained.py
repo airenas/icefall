@@ -296,14 +296,17 @@ def main():
     logging.info("Constructing Fbank computer")
     
     class TorchaudioFbank:
-        def __init__(self, sample_rate, num_mel_bins, high_freq=-400):
+        def __init__(self, sample_rate, num_mel_bins, high_freq=-400, device=None):
             self.sample_rate = sample_rate
+            self.device = device
             self.mel_transform = torchaudio.transforms.MelSpectrogram(
                 sample_rate=sample_rate,
                 n_mels=num_mel_bins,
                 f_max=sample_rate / 2 if high_freq < 0 else high_freq,
                 power=2.0,
             )
+            if device is not None:
+                self.mel_transform = self.mel_transform.to(device)
         
         def __call__(self, waves):
             features = []
@@ -316,7 +319,8 @@ def main():
     fbank = TorchaudioFbank(
         sample_rate=params.sample_rate,
         num_mel_bins=params.feature_dim,
-        high_freq=-400
+        high_freq=-400,
+        device=device
     )
 
     logging.info(f"Reading sound files: {params.sound_files}")
