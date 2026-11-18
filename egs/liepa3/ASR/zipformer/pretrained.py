@@ -114,7 +114,6 @@ import math
 from typing import List
 
 import k2
-import kaldifeat
 import torch
 import torchaudio
 from beam_search import (
@@ -295,15 +294,30 @@ def main():
     model.eval()
 
     logging.info("Constructing Fbank computer")
-    opts = kaldifeat.FbankOptions()
-    opts.device = device
-    opts.frame_opts.dither = 0
-    opts.frame_opts.snip_edges = False
-    opts.frame_opts.samp_freq = params.sample_rate
-    opts.mel_opts.num_bins = params.feature_dim
-    opts.mel_opts.high_freq = -400
-
-    fbank = kaldifeat.Fbank(opts)
+    
+    class TorchaudioFbank:
+        def __init__(self, sample_rate, num_mel_bins, high_freq=-400):
+            self.sample_rate = sample_rate
+            self.mel_transform = torchaudio.transforms.MelSpectrogram(
+                sample_rate=sample_rate,
+                n_mels=num_mel_bins,
+                f_max=sample_rate / 2 if high_freq < 0 else high_freq,
+                power=2.0,
+            )
+        
+        def __call__(self, waves):
+            features = []
+            for wave in waves:
+                mel_spec = self.mel_transform(wave)
+                log_mel = torch.log(mel_spec + 1e-10)
+                features.append(log_mel.t())  # transpose to (time, freq)
+            return features
+    
+    fbank = TorchaudioFbank(
+        sample_rate=params.sample_rate,
+        num_mel_bins=params.feature_dim,
+        high_freq=-400
+    )
 
     logging.info(f"Reading sound files: {params.sound_files}")
     waves = read_sound_files(
